@@ -88,9 +88,7 @@ void toMachine(int a, int b)
         accumulator = memoryDataRegister;
         printf("\nPC: %d | A: %d | MEM: [", programCounter, accumulator);
         for (i=0; i<9; i+=1)
-        {
-            printf("%d,", dataMemory[i]);
-        }
+        { printf("%d,", dataMemory[i]); }
         printf("]\n");
         programCounter += 1;
         break;
@@ -103,9 +101,7 @@ void toMachine(int a, int b)
         accumulator += memoryDataRegister;
         printf("\nPC: %d | A: %d | MEM: [", programCounter, accumulator);
         for (i=0; i<9; i+=1)
-        {
-            printf("%d,", dataMemory[i]);
-        }
+        { printf("%d,", dataMemory[i]); }
         printf("]\n");
         programCounter += 1;
         break;
@@ -118,9 +114,7 @@ void toMachine(int a, int b)
         dataMemory[memoryAddressRegister] = memoryDataRegister;
         printf("\nPC: %d | A: %d | MEM: [", programCounter, accumulator);
         for (i=0; i<9; i+=1)
-        {
-            printf("%d,", dataMemory[i]);
-        }
+        { printf("%d,", dataMemory[i]); }
         printf("]\n");
         programCounter += 1;
         break;
@@ -133,9 +127,7 @@ void toMachine(int a, int b)
         accumulator -= memoryDataRegister;
         printf("\nPC: %d | A: %d | MEM: [", programCounter, accumulator);
         for (i=0; i<9; i+=1)
-        {
-            printf("%d,", dataMemory[i]);
-        }
+        { printf("%d,", dataMemory[i]); }
         printf("]\n");
         programCounter += 1;
         break;
@@ -145,9 +137,7 @@ void toMachine(int a, int b)
         scanf("%d", &accumulator);
         printf("\nPC: %d | A: %d | MEM: [", programCounter, accumulator);
         for (i=0; i<9; i+=1)
-        {
-            printf("%d,", dataMemory[i]);
-        }
+        { printf("%d,", dataMemory[i]); }
         printf("]\n");
         programCounter += 1;
         break;
@@ -156,9 +146,7 @@ void toMachine(int a, int b)
         printf("\n>> Accumulator current value = %d <<\n", accumulator);
         printf("\nPC: %d | A: %d | MEM: [", programCounter, accumulator);
         for (i=0; i<9; i+=1)
-        {
-            printf("%d,", dataMemory[i]);
-        }
+        { printf("%d,", dataMemory[i]); }
         printf("]\n");
         programCounter += 1;
         break;
@@ -173,9 +161,7 @@ void toMachine(int a, int b)
         programCounter = b;
         printf("\nPC: %d | A: %d | MEM: [", programCounter, accumulator);
         for (i=0; i<9; i+=1)
-        {
-            printf("%d,", dataMemory[i]);
-        }
+        { printf("%d,", dataMemory[i]); }
         printf("]\n");
         break;
     case 9:
@@ -188,9 +174,7 @@ void toMachine(int a, int b)
         { programCounter += 1; }
         printf("\nPC: %d | A: %d | MEM: [", programCounter, accumulator);
         for (i=0; i<9; i+=1)
-        {
-            printf("%d,", dataMemory[i]);
-        }
+        { printf("%d,", dataMemory[i]); }
         printf("]\n");
         break;
     default:
