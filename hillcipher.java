@@ -115,16 +115,12 @@ public class hillcipher
 			{
 				formattext.append(textArray[i]);
 				if (i%81 == 0)
-				{
-					formattext.insert(i, "\n");
-				}
+				{ formattext.insert(i, "\n"); }
 			}
 			for (int i=0; i<ciphertext.length(); i+=1)
 			{
 				if (i%81 == 0)
-				{
-					ciphertext.insert(i, "\n");
-				}
+				{ ciphertext.insert(i, "\n"); }
 			}
 			/*
 			 * Every unnecessary variable above can be 'thrown away' now
@@ -154,9 +150,7 @@ public class hillcipher
 			BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
 			String str = null;
 			while ((str = reader.readLine()) != null)
-			{
-				output.append(str+"\n");
-			}
+			{ output.append(str+"\n"); }
 			reader.close();
 		}
 		catch(Exception e)
@@ -290,9 +284,7 @@ public class hillcipher
 				 * therefore, we'll check to see if we get 'x', if we do, replace it with 'z'
 				*/
 				if (padding == 120)
-				{
-					padding = 122;
-				}
+				{ padding = 122; }
 				str.append((char)(padding));
 			}
 		}
@@ -311,16 +303,12 @@ public class hillcipher
 		for (int i=0; i<str.length(); i+=1)
 		{
 			if (str.toString().toLowerCase().charAt(i) < 'a' || str.toString().toLowerCase().charAt(i) > 'z')
-			{
-				remove[i] = str.charAt(i);
-			}
+			{ remove[i] = str.charAt(i); }
 		}
 		for (int i=0; i<remove.length; i+=1)
 		{
 			if (remove[i] != '\0')
-			{
-				str.deleteCharAt(str.toString().indexOf(remove[i]));
-			}
+			{ str.deleteCharAt(str.toString().indexOf(remove[i])); }
 		}
 		
 		remove = null;
@@ -341,9 +329,7 @@ public class hillcipher
 			 * we start n at -1, because how I coded it; it technically starts at 0 (n+1 occurs before any storing)
 			*/
 			if (i%size == 0)
-			{
-				n += 1;
-			}
+			{ n += 1; }
 			k[n][i%size] = s[i];
 		}
 		
@@ -381,9 +367,7 @@ public class hillcipher
 			for (int j=0; j<k.length; j+=1)
 			{
 				for (int jj=0; jj<k.length; jj+=1)
-				{
-					product[i][j] += (split[i][jj]-97)*(Integer.parseInt(String.valueOf(k[j][jj])));
-				}
+				{ product[i][j] += (split[i][jj]-97)*(Integer.parseInt(String.valueOf(k[j][jj]))); }
 			}
 		}
 		
