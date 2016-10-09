@@ -179,6 +179,11 @@ public class hillcipher
 			{
 				try
 				{
+					/* Edit
+					 * This is untested, but I should be able to replace this with:
+					 * str[i][ii] = String.parseString((int)(str[i][ii]));
+					 *
+					*/
 					switch (str[i][ii])
 					{
 					case "a":
