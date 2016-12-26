@@ -1,0 +1,466 @@
+﻿<!DOCTYPE HTML>
+<html>
+
+<head>
+	<title>CIS30003 - Drug Store</title>
+<!-- IMPORT LIBRARIES
+------------------------------------------------------------------------------------------------->
+<link rel = "stylesheet" href = "css/bootstrap.min.css">
+<link rel = "stylesheet" href = "css/font-awesome.min.css">
+<link rel = "stylesheet" href = "http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+<script src = "http://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src = "js/bootstrap.min.js"></script>
+<link href="css/styles.css" rel="stylesheet" type="text/css" media="screen">
+<!------------------------------------------------------------------------------------------------->
+</head>
+
+<style>
+.navbar-brand
+{
+	letter-spacing: 0pt;
+	word-spacing: -1pt;
+	font-variant: small-caps;
+	font-family: palatino linotype, palatino, serif;
+	font-style: italic;
+	font-size: xx-large;
+	padding: 10px 170px 0px 20px;
+	color: #FFF;
+}
+.carousel
+{
+	margin-left: auto;
+	margin-right: auto
+	background-color: rgba(0, 0, 0, 0.38);
+	width: 100%;
+}
+.carousel .item
+{
+	width: 100%;
+}
+.carousel-caption
+{
+	bottom: 0;
+	background-color: rgba(0,0,0,0.8);
+	width: 80%;
+	left: 10%;
+	right: 0;
+	align: center;
+}
+.carousel-inner > .item > img
+{
+	margin: 0 auto;
+	height: 400px;
+	width: 80%;
+}
+</style>
+
+<body>
+
+<!-----------------------------------------------------------------------------------------------
+	Navigation Bar
+------------------------------------------------------------------------------------------------->
+<div class = "navbar navbar-inverse navbar-fixed-top">
+	<div class = "container">
+		<div class = "navbar-header">
+			<button type = "button" class = "navbar-toggle" data-toggle = "collapse" data-target = ".navbar-collapse">
+				<span class = "sr-only">Toggle Navigation</span>
+				<i class = "fa fa-bars fa-lg"></i>
+			</button>
+			<a class = "navbar-brand"><i class = "fa fa-desktop"></i>&nbsp;CIS 3003 Drug Store</a>
+		</div>
+		
+		<div class = "navbar-collapse collapse">
+			<ul class = "nav navbar-nav navbar-right">
+				<li class = "hidden-sm"><a href = "#inventoryTab">Inventory</a></li>
+				<li class = "hidden-sm"><a href = "#addTab">Add</a></li>
+				<li class = "hidden-sm"><a href = "#sellTab">Sell</a></li>
+				<li class = "hidden-sm"><a href = "#searchTab">Search</a></li>
+			</ul>
+		</div>
+	</div>
+</div>
+<!-----------------------------------------------------------------------------------------------
+	Carousel
+------------------------------------------------------------------------------------------------->
+<div id = "carouselMain" class = "carousel slide" data-ride = "carousel">
+	
+<!-- Wrapper for slides -->
+	<div class = "carousel-inner">
+		<div class = "item active">
+			<img src = "img/pharmacist-jobs.jpg"></li>
+			<div class = "carousel-caption">
+				<h2 style = "color: white; text-align: center">~ #1 Rated Drug Store in CIS 3003 ~</h2>
+				<h2><br></h2>
+				<h3 style = "color: gray; text-align: center">"I visit here often, there's no other place where I'd rather get my drugs"</h3>
+			</div>
+		</div>
+		<div class = "item">
+			<img src = "img/pharmacist-with-pills.jpg" style = "margin-left: auto; margin-right: auto"></li>
+			<div class = "carousel-caption">
+				<h2 style = "color: white; text-align: center">~ Highly Effective Products ~</h2>
+				<h2><br></h2>
+				<h3 style = "color: gray; text-align: center">"Just filing some paperwork, and I don't even work here, that's how great the products are"</h3>
+			</div>
+		</div>
+		<div class = "item">
+			<img src = "img/pills.jpg"></li>
+			<div class = "carousel-caption">
+				<h2 style = "color: white; text-align: center">~ Even The Pills Like it Here ~</h2>
+				<h2><br></h2>
+				<h3 style = "color: gray; text-align: center">"We make sure to be sold by the CIS 3003 Drug Store and no one else"</h3>
+			</div>
+		</div>
+	
+	<!-- Controls -->
+		<a class = "left carousel-control" href = "#carouselMain" role = "button" data-slide = "prev">
+			<span class = "glyphicon glyphicon-chevron-left"></span>
+		</a>
+		<a class = "right carousel-control" href = "#carouselMain" role = "button" data-slide = "next">
+			<span class = "glyphicon glyphicon-chevron-right"></span>
+		</a>
+	</div>
+</div>
+
+<!-----------------------------------------------------------------------------------------------
+	*Note* The following does not span the width of page, so it is wrapped within a div
+------------------------------------------------------------------------------------------------->
+<div id = "wrapper">
+<!-----------------------------------------------------------------------------------------------
+	The Main Table
+------------------------------------------------------------------------------------------------->
+	<div class = "centered-row">
+        <div id = "content">
+            <h1 id = "inventoryTab" style = "text-align: center">Inventory</h1>
+			<h2 id = "tableName" style = "text-align: center">Table Name <i class = "fa fa-pencil fa-1x" title = "Edit name of table" onClick = "editTableName()" style = "cursor: pointer"></i></h2>
+			<table class = "table table-hover" id = "tableHead">
+				<thead>
+					<tr>
+						<th>Item #</th>
+						<th>Product #</th>
+						<th>Vitamin Name</th>
+						<th>Size</th>
+						<th>Quantity</th>
+						<th>Expiration Date</th>
+						<th>Cost</th>
+						<th>Inc. | Dec.</th>
+						<th>Buy</th>
+					</tr>
+				</thead>
+				<tbody id = "dynamicTable">
+					<tr>
+						<td>1</td>
+						<td>1234</td>
+						<td>Pantothenic Acid</td>
+						<td>5 mg</td>
+						<td>22</td>
+						<td>07/21/2020</td>
+						<td>53.29$</td>
+						<td>
+							<i class = "fa fa-plus-circle fa-2x" title = "Increase quantity" onClick = "changeQuantity('add',0)" style = "cursor: pointer"></i>&nbsp;
+							<i class = "fa fa-minus-circle fa-2x" title = "Decrease quantity" onClick = "changeQuantity('subtract',0)" style = "cursor: pointer"></i>
+						</td>
+						<td>
+							<i class = "fa fa-shopping-cart fa-2x" title = "Add to cart" onClick = "changeQuantity('subtract',0,'buy')" style = "cursor: pointer"></i>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+<!-----------------------------------------------------------------------------------------------
+	Add Product Section
+------------------------------------------------------------------------------------------------->		
+		<div id = "content">
+			<hr>
+			
+			<h1 id = "addTab" style = "text-align: center">Inventory</h1>
+			<p style = "text-align: center">
+				<b>Vitamin Name:</b> 
+				<input type = "text" id = "vitName">
+				<i class = "fa fa-search fa-1x" title = "Search Table by Name of Drug" onClick = "searchTable('name')" style = "cursor: pointer"></i>
+			</p>
+			<p style = "text-align: center">
+				<b>Size of Vitamin:</b> 
+				<input type = "text" id = "vitSize">
+				<i class = "fa fa-search fa-1x" title = "Search Table by Size of Drug" onClick = "searchTable('size')" style = "cursor: pointer"></i>
+			</p>
+			<p style = "text-align: center"><b>Expiration Date:</b> &nbsp;&nbsp;
+				<select id = "expMonth">
+					<option>01</option>
+					<option>02</option>
+					<option>03</option>
+					<option>04</option>
+					<option>05</option>
+					<option>06</option>
+					<option>07</option>
+					<option>08</option>
+					<option>09</option>
+					<option>10</option>
+					<option>11</option>
+					<option>12</option>
+				</select>&nbsp;&nbsp;
+				<select id = "expDay">
+					<option>01</option><option>02</option><option>03</option><option>04</option><option>05</option>
+					<option>06</option><option>07</option><option>08</option><option>09</option><option>10</option>
+					<option>11</option><option>12</option><option>13</option><option>14</option><option>15</option>
+					<option>16</option><option>17</option><option>18</option><option>19</option><option>20</option>
+					<option>21</option><option>22</option><option>23</option><option>24</option><option>25</option>
+					<option>26</option><option>27</option><option>28</option><option>29</option><option>30</option><option>31</option>
+				</select>&nbsp;
+				<select id = "expYear">
+					<option>2015</option><option>2016</option><option>2017</option><option>2018</option><option>2019</option>
+					<option>2020</option><option>2021</option><option>2022</option><option>2023</option><option>2024</option>
+				</select>
+				<i class = "fa fa-search fa-1x" title = "Search Table by Expiration Date of Drug" onClick = "searchTable('date')" style = "cursor: pointer"></i>
+			</p>
+			<p style = "text-align: center">
+				<b>Cost of Product:</b> 
+				<input type = "text" id = "vitCost">
+				<i class = "fa fa-search fa-1x" title = "Search Table by Cost of Drug" onClick = "searchTable('cost')" style = "cursor: pointer"></i>
+			</p>
+			<p style = "text-align: center">
+				<a class = "btn btn-default" onclick = "addRow()" role = "button">Submit</a>
+			</p>
+			
+			<hr>
+		</div>
+<!-----------------------------------------------------------------------------------------------
+	Search Section
+------------------------------------------------------------------------------------------------->			
+		<div id = "content">
+            <h1 id = "searchTab" style = "text-align: center">Search Results</h1>
+			<table class = "table table-hover">
+				<thead>
+					<tr>
+						<th>Item #</th>
+						<th>Product #</th>
+						<th>Vitamin Name</th>
+						<th>Size</th>
+						<th>Quantity</th>
+						<th>Expiration Date</th>
+						<th>Cost</th>
+					</tr>
+				</thead>
+				<tbody id = "searchTable">
+				</tbody>
+			</table>
+			
+			<hr>
+			
+		</div>
+<!-----------------------------------------------------------------------------------------------
+	Receipt Section
+------------------------------------------------------------------------------------------------->		
+		<div id = "content">
+			<h1 id = "sellTab" style = "text-align: center">Sales Receipt</h1>
+			<table class = "table table-hover">
+				<thead>
+					<tr>
+						<th>Product #</th>
+						<th>Vitamin Name</th>
+						<th>Size</th>
+						<th>Expiration Date</th>
+						<th>Cost</th>
+					</tr>
+				</thead>
+				<tbody id = "sellTable">
+				</tbody>
+				<tbody><tr><td><h3>Total: <span id = "totalCost">0</span></h3></td></tr></tbody>
+			</table>
+			<p style = "text-align: center">
+				<a class = "btn btn-primary" onclick = "$('#sellTable tr').remove()" role = "button">Purchase</a>
+			</p><hr>
+		</div>
+	</div>
+</div>
+
+<div id="footer">       			
+	<p>Andres | Otis | CIS-3003 Project</p>		
+</div>
+
+</body>
+
+<script>
+/* Dyanmically changes the table's name, specific to element "dynamicTable" */
+function editTableName()
+{
+	var name = window.prompt("Insert the new name for the table", "");
+
+	if (name == null || name == '')
+	{
+		name = document.getElementById("tableName").innerHTML;
+	}
+
+	document.getElementById("tableName").innerHTML = name + " <i class = 'fa fa-pencil fa-1x' title = 'Edit name of table' onClick = 'editTableName()' style = 'cursor: pointer'></i>";
+}
+
+/* Return row count specific to element "dynamicTable" */
+function getRowCount()
+{
+	return (document.getElementById("dynamicTable").rows.length);
+}
+
+/* Return column count specific to element "dynamicTable" */
+function getColumnCount()
+{
+	return (document.getElementById("dynamicTable").rows[0].cells.length);
+}
+
+/* Return a random number between 0 and 9 as a string value */
+function randString()
+{
+	return (Math.floor(Math.random()*10).toString());
+}
+
+/* Insert a new row at the end of the table, specific to "dynamicTable" */
+function addRow()
+{
+	var table = document.getElementById("dynamicTable");
+	var row = table.insertRow(getRowCount());
+	addCell(row);
+}
+
+function addCell(r)
+{
+	var productNum = new String();
+	
+	/* We want our product # to be a length of 4, very few duplicates should arise */
+	for (var ii=0; ii<4; ii+=1)
+	{
+		productNum += randString();
+	}
+	
+	/*
+	 * Item # and Product # are the only 2 values that are not user specified
+	 * Item # is the position in the table 
+	 * Product # is randomly generated
+	*/
+	r.insertCell(0).innerHTML = getRowCount();
+	r.insertCell(1).innerHTML = productNum;
+	var d = parseInt(r.cells[0].innerHTML)-1;
+	
+	var tag = "<i class = 'fa fa-plus-circle fa-2x' title = 'Increase quantity' onClick = 'changeQuantity(\"add\","+d+")' style = 'cursor: pointer'></i>";
+	var tag2 = "<i class = 'fa fa-minus-circle fa-2x' title = 'Decrease quantity' onClick = 'changeQuantity(\"subtract\","+d+")' style = 'cursor: pointer'></i>";
+	
+	/* Get the user's input and store it for each appropriate cell */
+	var vitName = document.getElementById("vitName").value;
+	var vitSize = isNaN(parseInt(document.getElementById("vitSize").value)) ? 0 : parseInt(document.getElementById("vitSize").value);
+	var expMonth = document.getElementById("expMonth").value;
+	var expDay = document.getElementById("expDay").value;
+	var expYear = document.getElementById("expYear").value;
+	var expDate = new String(expMonth+"/"+expDay+"/"+expYear);
+	var vitCost = isNaN(parseFloat(document.getElementById("vitCost").value)) ? 0 : parseFloat(document.getElementById("vitCost").value);
+		
+	/* Now let's insert those variables */
+	r.insertCell(2).innerHTML = vitName;
+	r.insertCell(3).innerHTML = vitSize+" mg";
+	r.insertCell(4).innerHTML = 1; //Quantity is set to 1 because you're just adding it
+	r.insertCell(5).innerHTML = expDate;
+	r.insertCell(6).innerHTML = vitCost+"$";
+	r.insertCell(7).innerHTML = tag + " &nbsp;"+tag2;
+	r.insertCell(8).innerHTML = "<i class = 'fa fa-shopping-cart fa-2x' title = 'Add to cart' onClick = 'changeQuantity(\"subtract\","+d+",\"buy\")' style = 'cursor: pointer'></i>";
+}
+
+function changeQuantity(operand, index, action)
+{
+	var table = document.getElementById("dynamicTable");
+	var val = parseInt(table.rows[index].cells[4].innerHTML);
+	var newTable = document.getElementById("sellTable");
+	var price = parseFloat(document.getElementById("totalCost").innerHTML);
+	
+	if (operand == "add")
+	{
+		table.rows[index].cells[4].innerHTML = val+1;
+	}
+	else
+	{
+		if (val > 0)
+		{
+			table.rows[index].cells[4].innerHTML = val-1;
+		}
+	}
+	
+	if (action == "buy")
+	{
+		price += parseFloat(table.rows[index].cells[6].innerHTML);
+		var row = newTable.insertRow(document.getElementById("sellTable").rows.length);
+		row.insertCell(0).innerHTML = table.rows[index].cells[1].innerHTML;
+		row.insertCell(1).innerHTML = table.rows[index].cells[2].innerHTML;
+		row.insertCell(2).innerHTML = table.rows[index].cells[3].innerHTML;
+		row.insertCell(3).innerHTML = table.rows[index].cells[5].innerHTML;
+		row.insertCell(4).innerHTML = table.rows[index].cells[6].innerHTML;
+		document.getElementById("totalCost").innerHTML = price+"$";
+	}
+	else
+	{}		
+}
+
+
+function searchTable(search)
+{
+	/* Get the user's input and store it for each appropriate cell */
+	var vitName = document.getElementById("vitName").value;
+	var vitSize = parseInt(document.getElementById("vitSize").value);
+	var expMonth = document.getElementById("expMonth").value;
+	var expDay = document.getElementById("expDay").value;
+	var expYear = document.getElementById("expYear").value;
+	var expDate = new String(expMonth+"/"+expDay+"/"+expYear);
+	var vitCost = parseFloat(document.getElementById("vitCost").value);
+	
+	/* Let's make sure to clear out our table */
+	$("#searchTable tr").remove();
+	
+	/* Let's make sure that we have the table that we're operating with and the new one */
+	var table = document.getElementById("dynamicTable");
+	var newTable = document.getElementById("searchTable");
+	
+	/* This checks to see if we got any results */
+	var count = 0;
+
+	/* Now let's traverse the table and look for the value */
+	for (var i=0; i<getRowCount(); i+=1)
+	{
+		/* This switch is basically for input handling, and setting up our comparison conditional */
+		switch(search)
+		{
+			case "name":
+				var curValue = table.rows[i].cells[2].innerHTML;
+				var compare = vitName;
+				break;
+			case "size":
+				var curValue = parseInt(table.rows[i].cells[3].innerHTML);
+				var compare = vitSize;
+				break;
+			case "date":
+				var curValue = table.rows[i].cells[5].innerHTML;
+				var compare = expDate;
+				window.alert(Date.parse(curValue));
+				break;
+			case "cost":
+				var curValue = parseFloat(table.rows[i].cells[6].innerHTML);
+				var compare = vitCost;
+				break;
+		}
+				
+		
+		if ((curValue == compare) || (curValue == expDate && Date.parse(curValue) >= Date.parse(compare)))
+		{
+			count += 1;
+			var row = newTable.insertRow(document.getElementById("searchTable").rows.length);
+			row.insertCell(0).innerHTML = table.rows[i].cells[0].innerHTML;
+			row.insertCell(1).innerHTML = table.rows[i].cells[1].innerHTML;
+			row.insertCell(2).innerHTML = table.rows[i].cells[2].innerHTML;
+			row.insertCell(3).innerHTML = table.rows[i].cells[3].innerHTML;
+			row.insertCell(4).innerHTML = parseInt(table.rows[i].cells[4].innerHTML);
+			row.insertCell(5).innerHTML = table.rows[i].cells[5].innerHTML;
+			row.insertCell(6).innerHTML = table.rows[i].cells[6].innerHTML;
+		}
+	}
+	if (count == 0)
+	{
+		window.alert("No Matching Results Found");
+	}
+}
+
+</script>
+
+</html>
