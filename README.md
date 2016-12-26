@@ -13,4 +13,4 @@ This is a simple repository of all school programming assignments/personal codes
 
 <a href = "https://github.com/o9diaz00/Assignments/blob/master/System%20Administration%20Code%20Snippets">System Administration Code Snippets</a>
 
-<a href = "https://github.com/o9diaz00/Assignmens/blob/master/crcCheck.java">CRC Check</a>
+<a href = "https://github.com/o9diaz00/Assignments/blob/master/crcCheck.java">CRC Check</a>
