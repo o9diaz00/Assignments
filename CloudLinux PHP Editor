@@ -1,0 +1,211 @@
+#! /bin/bash
+
+clear;
+OS=$(cat /etc/redhat-release | awk '{print $1}');
+if [ $OS != "CloudLinux" ] 
+then
+	echo -e "\n\e[31mThis is not a CloudLinux Server!\e[37m\n";
+fi
+
+echo -e "\n\e[33mCloudLinux Easy PHP Editor\e[37m\n";
+echo -n "For which account would you like to edit the php settings? ";
+read user;
+
+if [[ $user != $(grep $user /etc/userdomains | cut -d' ' -f2) || $user == "nobody" ]]
+then
+	echo -e "\n\e[31mThis user does not exist!\n\e[37m";
+	exit;
+fi
+
+while [[ true ]]; do
+	version=$(selectorctl --user-current --user=$user | awk '{print $1}');
+	echo -e "\n\e[31m-----$user-----\e[37m";
+	echo -e "\n\e[32m============================\nMenu Options\n============================\n";
+	echo -e "\e[36m[0] Exit\n[1] PHP Extensions \n[2] PHP Options \n[3] PHP Version\n\e[37m";
+	echo -n "Please select a number: ";
+	read input;
+	if [[ $input == 0 ]]; then
+		echo -e "\n\e[31mExiting script....\n\e[37m";
+		exit;
+	fi
+
+	if [[ $input == 1 ]]; then
+		echo -e "\n\e[32m============================\nCurrent Extensions List:\n============================\n\e[33m";
+		selectorctl --list-user-extensions --user=$user --all;
+		if [[ $version == "native" ]]; then
+			echo -e "\n\e[31mYou cannot edit while using the native version!\e[37m";
+		else
+			echo -e "\n\e[36mPress [1] to disable an extension\nPress [2] to enable an extension\n\n(Press any other key to return)\e[37m\n";
+			echo -n "Please select a number: ";
+			read input2;
+			if [[ $input2 == 1 ]]; then
+				echo -e "\n\e[32m============================\nDisabling Extensions\n============================\n\n\e[36m";
+				extension=($(selectorctl --list-user-extensions --user=$user --all | grep "+" | awk '{print $2}'));
+				i=0;
+				while [[ $i -lt ${#extension[@]} ]]; do
+					echo -e "[$i]: ${extension[$i]}";
+					((i+=1));
+				done;
+				echo -e "\n(Press any other key to return)";
+				echo -ne "\n\e[37mPlease select a number: ";
+				read input3;
+				if [[ $input3 -lt ${#extension[@]} ]] && [[ $input3 -gt -1 ]]; then
+					selectorctl --disable-user-extensions=${extension[$input3]} --version=$version --user=$user;
+					echo -e "\e[33m\n${extension[$input3]} successfully disabled!\e[36m";
+				fi
+			fi
+			if [[ $input2 == 2 ]]; then
+				echo -e "\n\e[32m============================\nEnabling Extensions\n============================\n\n\e[36m";
+				extension=($(selectorctl --list-user-extensions --user=$user --all | grep "-" | awk '{print $2}'));
+				i=0;
+				while [[ $i -lt ${#extension[@]} ]]; do
+					echo -e "[$i]: ${extension[$i]}";
+					((i+=1));
+				done;
+				echo -e "\n(Press any other key to return)";
+				echo -ne "\n\e[37mPlease select a number: ";
+				read input3;
+				if [[ $input3 -lt ${#extension[@]} ]] && [[ $input3 -gt -1 ]]; then
+					selectorctl --enable-user-extensions=${extension[$input3]} --version=$version --user=$user;
+					echo -e "\e[33m\n${extension[$input3]} successfully enabled!\e[36m";
+				fi
+			fi
+		fi
+	fi
+
+	if [[ $input == 2 ]]; then
+		if [[ $version == "native" ]]; then
+			echo -e "\n\e[31mYou cannot edit while using the native version!\e[37m";
+		else
+			regex='^[0-9]+$';
+			echo -e "\n\e[32m============================\nEditting PHP Options\n============================\n\e[37m";
+			echo -e "\e[36mPress [1] to change the MEMORY LIMIT\nPress [2] to change the UPLOAD MAX FILESIZE\nPress [3] to change the POST MAX SIZE\nPress [4] to change the MAX EXECUTION TIME\nPress [5] to change the MAX INPUT TIME\nPress [6] to change ALLOW URL FOPEN\n\n(Press any other key to return)\n\e[37m";
+			echo -n "Please select a number: ";
+			read input2;
+			if [[ $input2 == 6 ]]; then
+				command=$(selectorctl --print-options --user=$user | cut -d$'\n' -f1-5 | grep VALUE | cut -d':' -f2);
+				if [[ $command ]]; then
+					echo -e "\n\e[33m$user has allow_url_fopen currently set to: \e[35m[ $command ]";
+				fi
+				echo -e "\n\e[36mPress [1] to turn allow_url_fopen On\nPress [2] to turn allow_url_fopen Off\n\e[37m";
+        			echo -en "Please select a number: ";
+				read value;
+				if [[ $value == 1 ]]; then
+					/usr/bin/piniset --append 'allow_url_fopen:On' -u $user;
+					echo -e "\n\e[33mallow_url_fopen has been turned \e[35mON!\e[37m";
+				fi
+				if [[ $value == 2 ]]; then
+					/usr/bin/piniset --append 'allow_url_fopen:Off' -u $user;
+					echo -e "\n\e[33mallow_url_fopen has been turned \e[35mOFF!\e[37m";
+				fi
+			fi
+			if [[ $input2 == 1 ]]; then
+				line=$(selectorctl --print-options --user=$user | grep -ni "title:memory_limit" | cut -d':' -f1);
+				endline=$(($line + 5));
+				command=$(selectorctl --print-options --user=$user | cut -d$'\n' -f$line-$endline | grep VALUE | cut -d':' -f2);
+				if [[ $command ]]; then
+					echo -e "\n\e[33m$user current Memory Limit: \e[35m[ $command ]";
+				fi
+				echo -en "\n\e[31mThis will set a new memory limit in M.\nA value of less than 0, and/or any letters will return to the previous menu.\n\n\e[37mPlease enter a number: ";
+				read value;
+				if [[ $value =~ $regex ]]; then
+					/usr/bin/piniset --append 'memory_limit:'$value'M' -u $user;
+					echo -e "\n\e[33mThe memory limit has been set to \e[35m[ $value M ]\e[37m";
+				else
+					echo -e "\nYou did not enter a valid number!";
+				fi
+			fi
+			if [[ $input2 == 2 ]]; then
+				line=$(selectorctl --print-options --user=$user | grep -ni "title:upload_max_filesize" | cut -d':' -f1);
+                                endline=$(($line + 5));
+                                command=$(selectorctl --print-options --user=$user | cut -d$'\n' -f$line-$endline | grep VALUE | cut -d':' -f2);
+                                if [[ $command ]]; then
+					echo -e "\n\e[33m$user current Upload Max Filesize: \e[35m[ $command ]";
+                                fi
+				echo -en "\n\e[31mThis will set a new upload max filesize in M.\nA value of less than 0, and/or any letters will return to the previous menu.\n\n\e[37mPlease enter a number: ";
+                                read value;
+                                if [[ $value =~ $regex ]]; then
+                                        /usr/bin/piniset --append 'upload_max_filesize:'$value'M' -u $user;
+                                        echo -e "\n\e[33mThe upload max filesize has been set to \e[35m[ $value M ]\e[37m";
+                                else
+                                        echo -e "\nYou did not enter a valid number!";
+                                fi
+			fi
+			if [[ $input2 == 3 ]]; then
+				line=$(selectorctl --print-options --user=$user | grep -ni "title:post_max_size" | cut -d':' -f1);
+				endline=$(($line + 5));
+				command=$(selectorctl --print-options --user=$user | cut -d$'\n' -f$line-$endline | grep VALUE | cut -d':' -f2);
+                                if [[ $command ]]; then
+					echo -e "\n\e[33m$user current Post Max Size: \e[35m[ $command ]";
+				fi
+				echo -en "\n\e[31mThis will set a new post max size in M.\nA value of less than 0, and/or any letters will return to the previous menu.\n\n\e[37mPlease enter a number: ";
+				read value;
+                                if [[ $value =~ $regex ]]; then
+                                        /usr/bin/piniset --append 'post_max_size:'$value'M' -u $user;
+                                        echo -e "\n\e[33mThe post max size has been set to \e[35m[ $value M ]\e[37m";
+                                else
+                                        echo -e "\nYou did not enter a valid number!";
+                                fi
+			fi
+			if [[ $input2 == 4 ]]; then
+				line=$(selectorctl --print-options --user=$user | grep -ni "title:max_execution_time" | cut -d':' -f1);
+				endline=$(($line + 5));
+                                command=$(selectorctl --print-options --user=$user | cut -d$'\n' -f$line-$endline | grep VALUE | cut -d':' -f2);
+                                if [[ $command ]]; then
+					echo -e "\n\e[33m$user current Max Execution Time: \e[35m[ $command ]";
+				fi
+                                echo -en "\n\e[31mThis will set a new max execution time in M.\nA value of less than 0, and/or any letters will return to the previous menu.\n\n\e[37mPlease enter a number: ";
+                                read value;
+                                if [[ $value =~ $regex ]]; then
+                                        /usr/bin/piniset --append 'max_execution_time:'$value'M' -u $user;
+                                        echo -e "\n\e[33mThe max execution time has been set to \e[35m[ $value M ]\e[37m";
+                                else
+                                        echo -e "\nYou did not enter a valid number!";
+                                fi
+			fi
+			if [[ $input2 == 5 ]]; then
+				line=$(selectorctl --print-options --user=$user | grep -ni "title:max_input_time" | cut -d':' -f1);
+				endline=$(($line + 5));
+                                command=$(selectorctl --print-options --user=$user | cut -d$'\n' -f$line-$endline | grep VALUE | cut -d':' -f2);
+                                if [[ $command ]]; then
+					echo -e "\n\e[33m$user current Max Input Time: \e[35m[ $command ]";
+                                fi
+				echo -en "\n\e[31mThis will set a new max execution time in M.\nA value of less than 0, and/or any letters will return to the previous menu.\n\n\e[37mPlease enter a number: ";
+                                read value;
+                                if [[ $value =~ $regex ]]; then
+                                        /usr/bin/piniset --append 'max_input_time:'$value'M' -u $user;
+                                        echo -e "\n\e[33mThe max input time has been set to \e[35m[ $value M ]\e[37m";
+                                else
+                                        echo -e "\nYou did not enter a valid number!";
+                                fi
+			fi		
+		fi
+	fi
+
+	if [[ $input == 3 ]]; then
+		echo -e "\n\e[33m$user is currently set to: \e[35m[ `selectorctl --user-current --user=$user` ]\e[37m";
+		echo -e "\n\e[36mPress [1] to change the php version\nPress [2] to use the native PHP\n\n(Press any other key to return)\e[37m\n";
+		echo -n "Please select a number: ";
+		read input2;
+		if [[ $input2 == 2 ]]; then
+			selectorctl --set-user-current=native --user=$user;
+			echo -e "\n\e[33m$user PHP successfully set to native version!\e[36m";
+		fi
+		if [[ $input2 == 1 ]]; then
+			versions=($(selectorctl --list | awk '{print $1}'));
+			i=0;
+			echo -e "\n\e[32m============================\nChanging PHP version\n============================\n\e[36m";
+			while [[ $i -lt ${#versions[@]} ]]; do
+				echo -e "\e[36m[$i] Set to versions: ${versions[$i]}";
+				((i+=1));
+			done;
+			echo -e "\n(Press any other key to return)\e[37m";
+			echo -ne "\nPlease select a number: ";
+			read input2;
+			if [[ $input2 -lt ${#versions[@]} ]] && [[ $input2 -gt -1 ]]; then
+				selectorctl --set-user-current=${versions[$input2]} --user=$user;
+				echo -e "\e[33m\n$user PHP successfully changed to: ${versions[$input2]}!\e[36m";
+			fi
+		fi
+	fi
+done;
