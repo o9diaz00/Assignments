@@ -49,7 +49,7 @@ phpExtensions()
 	read input;
 	if [[ $input -lt ${#extension[@]} ]] && [[ $input -gt -1 ]]; then
 		selectorctl --$1-user-extensions=${extension[$input]} --version=$version --user=$user;
-		echo -e "\e[33m\n$1 ${extension[$input]} is successful!\e[36m";
+		echo -e "\e[33m\n$1 [ ${extension[$input]} ] is successful!\e[36m";
 	fi
 }
 
