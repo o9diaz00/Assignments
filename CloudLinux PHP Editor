@@ -1,5 +1,3 @@
-To call script: [ bash <(curl -ks https://raw.githubusercontent.com/o9diaz00/Assignments/master/CloudLinux%20PHP%20Editor) ] 
-
 #! /bin/bash
 
 clear;
