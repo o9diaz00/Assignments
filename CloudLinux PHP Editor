@@ -35,6 +35,24 @@ phpOptions()
 	fi
 }
 
+phpExtensions()
+{
+	echo -e "\n\e[32m============================\n$1 Extensions\n============================\n\n\e[36m";
+	extension=($(selectorctl --list-user-extensions --user=$user --all | grep $2 | awk '{print $2}'));
+	i=0;
+	while [[ $i -lt ${#extension[@]} ]]; do
+		echo -e "[$i]: ${extension[$i]}";
+		((i+=1));
+	done;
+	echo -e "\n(Press any other key to return)";
+	echo -ne "\n\e[37mPlease select a number: ";
+	read input;
+	if [[ $input -lt ${#extension[@]} ]] && [[ $input -gt -1 ]]; then
+		selectorctl --$1-user-extensions=${extension[$input]} --version=$version --user=$user;
+		echo -e "\e[33m\n$1 ${extension[$input]} is successful!\e[36m";
+	fi
+}
+
 while [[ true ]]; do
 	version=$(selectorctl --user-current --user=$user | awk '{print $1}');
 	echo -e "\n\e[31m-----$user-----\e[37m";
@@ -57,36 +75,10 @@ while [[ true ]]; do
 			echo -n "Please select a number: ";
 			read input2;
 			if [[ $input2 == 1 ]]; then
-				echo -e "\n\e[32m============================\nDisabling Extensions\n============================\n\n\e[36m";
-				extension=($(selectorctl --list-user-extensions --user=$user --all | grep "+" | awk '{print $2}'));
-				i=0;
-				while [[ $i -lt ${#extension[@]} ]]; do
-					echo -e "[$i]: ${extension[$i]}";
-					((i+=1));
-				done;
-				echo -e "\n(Press any other key to return)";
-				echo -ne "\n\e[37mPlease select a number: ";
-				read input3;
-				if [[ $input3 -lt ${#extension[@]} ]] && [[ $input3 -gt -1 ]]; then
-					selectorctl --disable-user-extensions=${extension[$input3]} --version=$version --user=$user;
-					echo -e "\e[33m\n${extension[$input3]} successfully disabled!\e[36m";
-				fi
+				phpExtensions() "disable" "+";
 			fi
 			if [[ $input2 == 2 ]]; then
-				echo -e "\n\e[32m============================\nEnabling Extensions\n============================\n\n\e[36m";
-				extension=($(selectorctl --list-user-extensions --user=$user --all | grep "-" | awk '{print $2}'));
-				i=0;
-				while [[ $i -lt ${#extension[@]} ]]; do
-					echo -e "[$i]: ${extension[$i]}";
-					((i+=1));
-				done;
-				echo -e "\n(Press any other key to return)";
-				echo -ne "\n\e[37mPlease select a number: ";
-				read input3;
-				if [[ $input3 -lt ${#extension[@]} ]] && [[ $input3 -gt -1 ]]; then
-					selectorctl --enable-user-extensions=${extension[$input3]} --version=$version --user=$user;
-					echo -e "\e[33m\n${extension[$input3]} successfully enabled!\e[36m";
-				fi
+				phpExtensions() "enable" "-";
 			fi
 		fi
 	fi
