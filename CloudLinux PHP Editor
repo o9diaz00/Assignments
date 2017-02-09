@@ -43,7 +43,7 @@ phpOptions()
 
 phpExtensions()
 {
-	echo -e "\n\e[32m============================\n$1 Extensions\n============================\n\n\e[36m";
+	echo -e "\n\e[32m============================\n$1 Extensions\n============================\n\e[36m";
 	extension=($(selectorctl --list-user-extensions --user=$user --all | grep $2 | awk '{print $2}'));
 	i=0;
 	while [[ $i -lt ${#extension[@]} ]]; do
