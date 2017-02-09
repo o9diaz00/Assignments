@@ -119,84 +119,18 @@ while [[ true ]]; do
 			fi
 			if [[ $input2 == 1 ]]; then
 				phpOptions "memory_limit";
-				##line=$(selectorctl --print-options --user=$user | grep -ni "title:memory_limit" | cut -d':' -f1);
-				##endline=$(($line + 5));
-				##command=$(selectorctl --print-options --user=$user | cut -d$'\n' -f$line-$endline | grep VALUE | cut -d':' -f2);
-				##if [[ $command ]]; then
-				##	echo -e "\n\e[33m$user current Memory Limit: \e[35m[ $command ]";
-				##fi
-				##echo -en "\n\e[31mThis will set a new memory limit in M.\nA value of less than 0, and/or any letters will return to the previous menu.\n\n\e[37mPlease enter a number: ";
-				##read value;
-				##if [[ $value =~ $regex ]]; then
-				##	/usr/bin/piniset --append 'memory_limit:'$value'M' -u $user;
-				##	echo -e "\n\e[33mThe memory limit has been set to \e[35m[ $value M ]\e[37m";
-				##else
-				##	echo -e "\nYou did not enter a valid number!";
-				##fi
 			fi
 			if [[ $input2 == 2 ]]; then
-				line=$(selectorctl --print-options --user=$user | grep -ni "title:upload_max_filesize" | cut -d':' -f1);
-                                endline=$(($line + 5));
-                                command=$(selectorctl --print-options --user=$user | cut -d$'\n' -f$line-$endline | grep VALUE | cut -d':' -f2);
-                                if [[ $command ]]; then
-					echo -e "\n\e[33m$user current Upload Max Filesize: \e[35m[ $command ]";
-                                fi
-				echo -en "\n\e[31mThis will set a new upload max filesize in M.\nA value of less than 0, and/or any letters will return to the previous menu.\n\n\e[37mPlease enter a number: ";
-                                read value;
-                                if [[ $value =~ $regex ]]; then
-                                        /usr/bin/piniset --append 'upload_max_filesize:'$value'M' -u $user;
-                                        echo -e "\n\e[33mThe upload max filesize has been set to \e[35m[ $value M ]\e[37m";
-                                else
-                                        echo -e "\nYou did not enter a valid number!";
-                                fi
+				phpOptions "upload_max_filesize";
 			fi
 			if [[ $input2 == 3 ]]; then
-				line=$(selectorctl --print-options --user=$user | grep -ni "title:post_max_size" | cut -d':' -f1);
-				endline=$(($line + 5));
-				command=$(selectorctl --print-options --user=$user | cut -d$'\n' -f$line-$endline | grep VALUE | cut -d':' -f2);
-                                if [[ $command ]]; then
-					echo -e "\n\e[33m$user current Post Max Size: \e[35m[ $command ]";
-				fi
-				echo -en "\n\e[31mThis will set a new post max size in M.\nA value of less than 0, and/or any letters will return to the previous menu.\n\n\e[37mPlease enter a number: ";
-				read value;
-                                if [[ $value =~ $regex ]]; then
-                                        /usr/bin/piniset --append 'post_max_size:'$value'M' -u $user;
-                                        echo -e "\n\e[33mThe post max size has been set to \e[35m[ $value M ]\e[37m";
-                                else
-                                        echo -e "\nYou did not enter a valid number!";
-                                fi
+				phpOptions "post_max_size";
 			fi
 			if [[ $input2 == 4 ]]; then
-				line=$(selectorctl --print-options --user=$user | grep -ni "title:max_execution_time" | cut -d':' -f1);
-				endline=$(($line + 5));
-                                command=$(selectorctl --print-options --user=$user | cut -d$'\n' -f$line-$endline | grep VALUE | cut -d':' -f2);
-                                if [[ $command ]]; then
-					echo -e "\n\e[33m$user current Max Execution Time: \e[35m[ $command ]";
-				fi
-                                echo -en "\n\e[31mThis will set a new max execution time in M.\nA value of less than 0, and/or any letters will return to the previous menu.\n\n\e[37mPlease enter a number: ";
-                                read value;
-                                if [[ $value =~ $regex ]]; then
-                                        /usr/bin/piniset --append 'max_execution_time:'$value'M' -u $user;
-                                        echo -e "\n\e[33mThe max execution time has been set to \e[35m[ $value M ]\e[37m";
-                                else
-                                        echo -e "\nYou did not enter a valid number!";
-                                fi
+				phpOptions "max_execution_time"
 			fi
 			if [[ $input2 == 5 ]]; then
-				line=$(selectorctl --print-options --user=$user | grep -ni "title:max_input_time" | cut -d':' -f1);
-				endline=$(($line + 5));
-                                command=$(selectorctl --print-options --user=$user | cut -d$'\n' -f$line-$endline | grep VALUE | cut -d':' -f2);
-                                if [[ $command ]]; then
-					echo -e "\n\e[33m$user current Max Input Time: \e[35m[ $command ]";
-                                fi
-				echo -en "\n\e[31mThis will set a new max execution time in M.\nA value of less than 0, and/or any letters will return to the previous menu.\n\n\e[37mPlease enter a number: ";
-                                read value;
-                                if [[ $value =~ $regex ]]; then
-                                        /usr/bin/piniset --append 'max_input_time:'$value'M' -u $user;
-                                        echo -e "\n\e[33mThe max input time has been set to \e[35m[ $value M ]\e[37m";
-                                else
-                                        echo -e "\nYou did not enter a valid number!";
-                                fi
+				phpOptions "max_input_time"
 			fi		
 		fi
 	fi
