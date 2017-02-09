@@ -28,7 +28,7 @@ phpOptions()
 	echo -en "\n\e[31mThis will set a new $1 in M.\nA value of less than 0, and/or any letters will return to the previous menu.\n\n\e[37mPlease enter a number: ";
 	read value;
 	if [[ $value =~ $regex ]]; then
-		/usr/bin/piniset --append '$1:'$value'M' -u $user;
+		/usr/bin/piniset --append $1:$value'M' -u $user;
 		echo -e "\n\e[33mThe $1 has been set to \e[35m[ $value M ]\e[37m";
 	else
 		echo -e "\nYou did not enter a valid number!";
