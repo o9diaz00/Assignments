@@ -118,7 +118,7 @@ while [[ true ]]; do
 				fi
 			fi
 			if [[ $input2 == 1 ]]; then
-				phpOptions memory_limit;
+				phpOptions "memory_limit";
 				##line=$(selectorctl --print-options --user=$user | grep -ni "title:memory_limit" | cut -d':' -f1);
 				##endline=$(($line + 5));
 				##command=$(selectorctl --print-options --user=$user | cut -d$'\n' -f$line-$endline | grep VALUE | cut -d':' -f2);
