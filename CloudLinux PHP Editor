@@ -1,3 +1,5 @@
+To call script: [ bash <(curl -ks https://raw.githubusercontent.com/o9diaz00/Assignments/master/CloudLinux%20PHP%20Editor) ] 
+
 #! /bin/bash
 
 clear;
@@ -16,6 +18,24 @@ then
 	echo -e "\n\e[31mThis user does not exist!\n\e[37m";
 	exit;
 fi
+
+phpOptions()
+{
+	line=$(selectorctl --print-options --user=$user | grep -ni "title:$1" | cut -d':' -f1);
+	endline=$(($line + 5));
+	command=$(selectorctl --print-options --user=$user | cut -d$'\n' -f$line-$endline | grep VALUE | cut -d':' -f2);
+	if [[ $command ]]; then
+		echo -e "\n\e[33m$user current $1: \e[35m[ $command ]";
+	fi
+	echo -en "\n\e[31mThis will set a new $1 in M.\nA value of less than 0, and/or any letters will return to the previous menu.\n\n\e[37mPlease enter a number: ";
+	read value;
+	if [[ $value =~ $regex ]]; then
+		/usr/bin/piniset --append '$1:'$value'M' -u $user;
+		echo -e "\n\e[33mThe $1 has been set to \e[35m[ $value M ]\e[37m";
+	else
+		echo -e "\nYou did not enter a valid number!";
+	fi
+}
 
 while [[ true ]]; do
 	version=$(selectorctl --user-current --user=$user | awk '{print $1}');
@@ -100,20 +120,21 @@ while [[ true ]]; do
 				fi
 			fi
 			if [[ $input2 == 1 ]]; then
-				line=$(selectorctl --print-options --user=$user | grep -ni "title:memory_limit" | cut -d':' -f1);
-				endline=$(($line + 5));
-				command=$(selectorctl --print-options --user=$user | cut -d$'\n' -f$line-$endline | grep VALUE | cut -d':' -f2);
-				if [[ $command ]]; then
-					echo -e "\n\e[33m$user current Memory Limit: \e[35m[ $command ]";
-				fi
-				echo -en "\n\e[31mThis will set a new memory limit in M.\nA value of less than 0, and/or any letters will return to the previous menu.\n\n\e[37mPlease enter a number: ";
-				read value;
-				if [[ $value =~ $regex ]]; then
-					/usr/bin/piniset --append 'memory_limit:'$value'M' -u $user;
-					echo -e "\n\e[33mThe memory limit has been set to \e[35m[ $value M ]\e[37m";
-				else
-					echo -e "\nYou did not enter a valid number!";
-				fi
+				phpOptions memory_limit;
+				##line=$(selectorctl --print-options --user=$user | grep -ni "title:memory_limit" | cut -d':' -f1);
+				##endline=$(($line + 5));
+				##command=$(selectorctl --print-options --user=$user | cut -d$'\n' -f$line-$endline | grep VALUE | cut -d':' -f2);
+				##if [[ $command ]]; then
+				##	echo -e "\n\e[33m$user current Memory Limit: \e[35m[ $command ]";
+				##fi
+				##echo -en "\n\e[31mThis will set a new memory limit in M.\nA value of less than 0, and/or any letters will return to the previous menu.\n\n\e[37mPlease enter a number: ";
+				##read value;
+				##if [[ $value =~ $regex ]]; then
+				##	/usr/bin/piniset --append 'memory_limit:'$value'M' -u $user;
+				##	echo -e "\n\e[33mThe memory limit has been set to \e[35m[ $value M ]\e[37m";
+				##else
+				##	echo -e "\nYou did not enter a valid number!";
+				##fi
 			fi
 			if [[ $input2 == 2 ]]; then
 				line=$(selectorctl --print-options --user=$user | grep -ni "title:upload_max_filesize" | cut -d':' -f1);
