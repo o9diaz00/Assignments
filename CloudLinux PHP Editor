@@ -44,8 +44,8 @@ phpExtensions()
 		echo -e "[$i]: ${extension[$i]}";
 		((i+=1));
 	done;
-	echo -e "\n(Press any other key to return)";
-	echo -ne "\n\e[37mPlease select a number: ";
+	##echo -e "\n(Press any other key to return)";
+	##echo -ne "\n\e[37mPlease select a number: ";
 	##read input;
 	##if [[ $input -lt ${#extension[@]} ]] && [[ $input -gt -1 ]]; then
 	##	selectorctl --$1-user-extensions=${extension[$input]} --version=$version --user=$user;
