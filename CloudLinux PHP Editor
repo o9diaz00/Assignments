@@ -15,6 +15,8 @@ fi
 
 echo -e "\n\e[33mCloudLinux Easy PHP Editor\e[37m\n";
 
+user=0;
+
 if [[ $1 ]]; then
 	user = $1;
 else
