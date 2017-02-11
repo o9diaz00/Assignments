@@ -71,11 +71,11 @@ while [[ true ]]; do
 	fi
 
 	if [[ $input == 1 ]]; then
-		echo -e "\n\e[32m============================\nCurrent Extensions List:\n============================\n\e[33m";
-		selectorctl --list-user-extensions --user=$user --all;
 		if [[ $version == "native" ]]; then
 			echo -e "\n\e[31mYou cannot edit while using the native version!\e[37m";
 		else
+			echo -e "\n\e[32m============================\nCurrent Extensions List:\n============================\n\e[33m";
+			selectorctl --list-user-extensions --user=$user --all;
 			echo -e "\n\e[36mPress [1] to disable an extension\nPress [2] to enable an extension\n\n(Press any other key to return)\e[37m\n";
 			echo -n "Please select a number: ";
 			read input2;
