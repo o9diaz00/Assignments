@@ -63,6 +63,7 @@ phpExtensions()
 		selectorctl --$1-user-extensions=${extension[$input]} --version=$version --user=$user;
 		echo -e "\e[33m\n$1 [ ${extension[$input]} ] is successful!\e[36m";
 	fi
+	activeExtensions;
 }
 
 activeExtensions()
@@ -71,9 +72,7 @@ activeExtensions()
       echo -e "\n\e[31mYou cannot edit while using the native version!\e[37m";
    else
       clear;
-      echo -e "\n\e[32m============================\nCurrent Extensions List:\n============================\n\e[33m";
-      
-      
+      echo -e "\n\e[32m============================\nCurrent Extensions List:\n============================\n\e[33m";  
       ## +- Style
       i=0;
       columns=5;
@@ -111,9 +110,7 @@ activeExtensions()
       fi
       if [[ "$input2" == 2 ]]; then
          phpExtensions "enable" "-";
-      fi
-      
-      activeExtensions;
+      fi     
    fi
 }
 
