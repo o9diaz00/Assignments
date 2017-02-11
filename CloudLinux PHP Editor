@@ -14,8 +14,13 @@ then
 fi
 
 echo -e "\n\e[33mCloudLinux Easy PHP Editor\e[37m\n";
-echo -n "For which account would you like to edit the php settings? ";
-read user;
+
+if [[ $1 ]]; then
+	user = $1;
+else
+	echo -n "For which account would you like to edit the php settings? ";
+	read user;
+fi
 
 if [[ $user != $(grep $user /etc/userdomains | cut -d' ' -f2) || $user == "nobody" ]]
 then
