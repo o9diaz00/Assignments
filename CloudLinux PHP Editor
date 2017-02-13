@@ -1,12 +1,6 @@
 ##################################################################
 ##		  CLOUDLINUX PHP EDITOR				##
 ##################################################################
-# ** REV 1: 02/09/17 **
-## Created functions "phpOptions()" and "phpExtensions()" to truncate the script some
-# ** REV 2: 02/11/17 **
-## Some changes to the formatting for PHP Extensions done by Gabe
-## Also noted that quotations must be put around user input variables or else funky stuff happens
-#####################################################################################
 #! /bin/bash
 
 clear;
