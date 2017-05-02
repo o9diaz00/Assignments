@@ -1,5 +1,5 @@
 ##################################################################
-##		  CLOUDLINUX PHP EDITOR				##
+##		  CLOUDLINUX PHP EDITOR	(cPanel)		##
 ##################################################################
 #! /bin/bash
 
@@ -18,7 +18,7 @@ else
    user="$1";
 fi
 
-if [[ $user != $(grep $user /etc/userdomains | cut -d' ' -f2) || $user == "nobody" ]]; then
+if [[ $user != $(grep $user /etc/userdomains | cut -d' ' -f2 | head -1) || $user == "nobody" ]]; then
 	echo -e "\n\e[31mThis user does not exist!\n\e[37m";
 	exit;
 fi
