@@ -1,39 +1,30 @@
-##################################################################
-##		  CLOUDLINUX PHP EDITOR	(cPanel)		##
-##################################################################
+######################################
+##     CLOUDLINUX PHP EDITOR	    ##
+######################################
 #! /bin/bash
 
-clear;
-OS=$(cat /etc/redhat-release | awk '{print $1}');
-if [[ $OS != "CloudLinux" ]]; then
-	echo -e "\n\e[31mThis is not a CloudLinux Server!\e[37m\n";
-	exit;
-fi
+###########################
+# Quick Functions:        #
+#  - getUser()            #
+#  - phpOptions()         #
+#  - phpExtensions()      #
+#  - activeExtensions()   #
+###########################
 
-if [ -z "$1" ]; then
-   echo -e "\n\e[33mCloudLinux Easy PHP Editor\e[37m\n";
-   echo -n "For which account would you like to edit the php settings? ";
-   read user;
+getUser()
+{
+if [[ -z "$1" ]]; then
+	echo -n "For which account would you like to edit the php settings? ";
+	read user;
 else
-   user="$1";
+	user="$1";
 fi
 
 if [[ $user != $(grep $user /etc/userdomains | cut -d' ' -f2 | head -1) || $user == "nobody" ]]; then
 	echo -e "\n\e[31mThis user does not exist!\n\e[37m";
-	exit;
+	getUser();
 fi
-
-if [[ $(/usr/sbin/cagefsctl --list-disabled | grep $user) ]]; then
-	echo -e "\n\e[31mThis user is not enabled in CageFS!\e[37m";
-	echo -en "\nDo you want to enable this user into the CageFS [ y/n ]? "
-	read input;
-	if [[ "$input" == "y" ]]; then
-		/usr/sbin/cagefsctl --enable $user;
-	else
-		echo -e "\n\e[31mExiting script...\e[37m\n";
-		exit;
-	fi
-fi
+}
 
 phpOptions()
 {
@@ -120,6 +111,31 @@ activeExtensions()
       fi     
    fi
 }
+
+###########################
+# The Actual Script       #
+###########################
+clear;
+OS=$(awk '{print $1}' /etc/redhat-release);
+if [[ $OS != "CloudLinux" ]]; then
+	echo -e "\n\e[31mThis is not a CloudLinux Server!\e[37m\n";
+	exit;
+fi
+
+echo -e "\n\e[33mCloudLinux Easy PHP Editor\e[37m\n";
+getUser();
+
+if [[ $(/usr/sbin/cagefsctl --list-disabled | grep $user) ]]; then
+	echo -e "\n\e[31mThis user is not enabled in CageFS!\e[37m";
+	echo -en "\nDo you want to enable this user into the CageFS [ y/n ]? "
+	read input;
+	if [[ "$input" == "y" ]]; then
+		/usr/sbin/cagefsctl --enable $user;
+	else
+		echo -e "\n\e[31mExiting script...\e[37m\n";
+		exit;
+	fi
+fi
 
 while [[ true ]]; do
 	version=$(selectorctl --user-current --user=$user | awk '{print $1}');
