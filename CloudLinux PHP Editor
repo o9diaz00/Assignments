@@ -23,8 +23,7 @@ getUser()
 			exit;
 		fi
 	done;
-		echo -e "\e[33mUser has been set to $user\e[37m";
-	fi
+	echo -e "\e[33mUser has been set to $user\e[37m";
 }
 
 phpOptions()
