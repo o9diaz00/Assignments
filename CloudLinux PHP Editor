@@ -1,5 +1,5 @@
 ######################################
-##     CLOUDLINUX PHP EDITOR	    ##
+##		  CLOUDLINUX PHP EDITOR		##
 ######################################
 #! /bin/bash
 
@@ -13,17 +13,15 @@
 
 getUser()
 {
-if [[ -z "$1" ]]; then
 	echo -n "For which account would you like to edit the php settings? ";
 	read user;
-else
-	user="$1";
-fi
 
-if [[ $user != $(grep $user /etc/userdomains | cut -d' ' -f2 | head -1) || $user == "nobody" ]]; then
-	echo -e "\n\e[31mThis user does not exist!\n\e[37m";
-	getUser();
-fi
+	if [[ $user != $(grep $user /etc/userdomains | cut -d' ' -f2 | head -1) || $user == "nobody" ]]; then
+		echo -e "\n\e[31mThis user does not exist!\n\e[37m";
+		getUser();
+	fi
+
+	echo -e "\e[33mUser has been set to $user\e[37m";
 }
 
 phpOptions()
@@ -123,7 +121,12 @@ if [[ $OS != "CloudLinux" ]]; then
 fi
 
 echo -e "\n\e[33mCloudLinux Easy PHP Editor\e[37m\n";
-getUser();
+if [[ -z "$1" ]]; then
+	getUser();
+else
+	user="$1";
+fi
+	
 
 if [[ $(/usr/sbin/cagefsctl --list-disabled | grep $user) ]]; then
 	echo -e "\n\e[31mThis user is not enabled in CageFS!\e[37m";
@@ -141,7 +144,7 @@ while [[ true ]]; do
 	version=$(selectorctl --user-current --user=$user | awk '{print $1}');
 	echo -e "\n\e[31m-----$user-----\e[37m";
 	echo -e "\n\e[32m============================\nMenu Options\n============================\n";
-	echo -e "\e[36m[0] Exit\n[1] PHP Extensions \n[2] PHP Options \n[3] PHP Version\n\e[37m";
+	echo -e "\e[36m[0] Exit\n[1] PHP Extensions \n[2] PHP Options \n[3] PHP Version\n[4] Change User\n\e[37m";
 	echo -n "Please select a number: ";
 	read input;
 	if [[ "$input" == 0 ]]; then
@@ -223,5 +226,9 @@ while [[ true ]]; do
             echo -e "$input2 is an invalid input";
 			fi
 		fi
+	fi
+	
+	if [[ "$input" == 4 ]]; then
+		getUser();
 	fi
 done;
