@@ -19,7 +19,7 @@ getUser()
 	while [[ $user != $(grep $user /etc/userdomains | cut -d' ' -f2 | head -1) || $user == "nobody" ]]; do
 		echo -e "\n\e[31mThis user does not exist!\n\e[37m";
 		getUser;
-		if [[ $user == "" ]]; then
+		if [[ $user =~ "" ]]; then
 			exit;
 		fi
 	done;
