@@ -1,5 +1,5 @@
 ######################################
-##	CLOUDLINUX PHP EDITOR	   ##
+##	 CLOUDLINUX PHP EDITOR	    ##
 ######################################
 #! /bin/bash
 
@@ -16,10 +16,13 @@ getUser()
 	echo -n "For which account would you like to edit the php settings? ";
 	read user;
 
-	if [[ $user != $(grep $user /etc/userdomains | cut -d' ' -f2 | head -1) || $user == "nobody" || $user == "" ]]; then
+	while [[ $user != $(grep $user /etc/userdomains | cut -d' ' -f2 | head -1) || $user == "nobody" ]]; do
 		echo -e "\n\e[31mThis user does not exist!\n\e[37m";
 		getUser;
-	else
+		if [[ $user == "" ]]; then
+			exit;
+		fi
+	done;
 		echo -e "\e[33mUser has been set to $user\e[37m";
 	fi
 }
