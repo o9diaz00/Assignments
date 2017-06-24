@@ -1,5 +1,5 @@
 ######################################
-##		  CLOUDLINUX PHP EDITOR		##
+##	CLOUDLINUX PHP EDITOR       ##
 ######################################
 #! /bin/bash
 
@@ -18,7 +18,7 @@ getUser()
 
 	if [[ $user != $(grep $user /etc/userdomains | cut -d' ' -f2 | head -1) || $user == "nobody" ]]; then
 		echo -e "\n\e[31mThis user does not exist!\n\e[37m";
-		getUser();
+		getUser;
 	fi
 
 	echo -e "\e[33mUser has been set to $user\e[37m";
@@ -229,6 +229,6 @@ while [[ true ]]; do
 	fi
 	
 	if [[ "$input" == 4 ]]; then
-		getUser();
+		getUser;
 	fi
 done;
