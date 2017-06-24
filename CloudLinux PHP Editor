@@ -122,7 +122,7 @@ fi
 
 echo -e "\n\e[33mCloudLinux Easy PHP Editor\e[37m\n";
 if [[ -z "$1" ]]; then
-	getUser();
+	getUser;
 else
 	user="$1";
 fi
