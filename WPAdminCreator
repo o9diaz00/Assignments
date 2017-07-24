@@ -22,38 +22,38 @@ echo -e "$color_purple      WordPress Admin User Creator";
 # Create a database dump called "$database.sql" in the directory: "$pwd/.hd/$database/", if possible
 
 if [[ -f wp-config.php ]]; then
-        database=$(grep "DB_NAME" wp-config.php | head -1 | cut -d"'" -f4);
-        echo -en "$color_white\n Do you want to create a backup of this database ( any input other than y or Y will NOT create a dump )? ";
-        read input;
-        if [[ $input == 'y' || $input == 'Y' ]]; then
-                mkdir -p ./.hd/$database 2> /dev/null;
-                (mysqldump $database > ./.hd/$database/$database.sql) 2> /dev/null;
-                if [[ "$?" -eq 0 ]]; then
-                        echo -e "$color_red\n Created database backup at $(pwd)/.hd/$database/$database.sql\n$color_white";
-                else
-                        echo -e "$color_red\n Attempt to dump database FAILED!  You may want to cancel and investigate why\n$color_white"
-                fi
-        else
-                echo -e "$color_white\n Skipping database dump...\n";
-        fi
+	database=$(grep "DB_NAME" wp-config.php | head -1 | cut -d"'" -f4);
+	echo -en "$color_white\n Do you want to create a backup of this database ( any input other than y or Y will NOT create a dump )? ";
+	read input;
+	if [[ $input == 'y' || $input == 'Y' ]]; then
+		mkdir -p ./.hd/$database 2> /dev/null;
+		(mysqldump $database > ./.hd/$database/$database.sql) 2> /dev/null;
+		if [[ "$?" -eq 0 ]]; then
+	        	echo -e "$color_red\n Created database backup at $(pwd)/.hd/$database/$database.sql\n$color_white";
+		else
+			echo -e "$color_red\n Attempt to dump database FAILED!  You may want to cancel and investigate why\n$color_white"
+		fi
+	else
+		echo -e "$color_white\n Skipping database dump...\n";
+	fi
+	
+	# Kind of important variables here:
+	prefix=$(grep "_prefix" wp-config.php | awk '{print $3}' | tr -d ";'\r");
+	tbl_options="$prefix""options";
+	tbl_users="$prefix""users";
+	tbl_usermeta="$prefix""usermeta";
+	Cuser_level="$prefix""user_level";
+	Ccapabilities="$prefix""capabilities";
+	site=$(mysql $database -Be "SELECT option_value FROM $tbl_options WHERE option_name='siteURL';" | tail -1);
 
-        # Kind of important variables here:
-        prefix=$(grep "_prefix" wp-config.php | awk '{print $3}' | tr -d ";'\r");
-        tbl_options="$prefix""options";
-        tbl_users="$prefix""users";
-        tbl_usermeta="$prefix""usermeta";
-        Cuser_level="$prefix""user_level";
-        Ccapabilities="$prefix""capabilities";
-        site=$(mysql $database -Be "SELECT option_value FROM $tbl_options WHERE option_name='siteURL';" | tail -1);
-
-        echo -e "$color_green ======================================="
-        echo -e "$color_cyan Site: $color_yellow $site\n$color_cyan Database: $color_yellow $database $color_white";
+	echo -e "$color_green ======================================="
+	echo -e "$color_cyan Site: $color_yellow $site\n$color_cyan Database: $color_yellow $database $color_white";
         echo -e "$color_green =======================================$color_white"
-        ID=$(mysql $database -Be "SELECT MAX(ID) from $tbl_users;" | tail -1);
-        ID=$((ID+1));
+	ID=$(mysql $database -Be "SELECT MAX(ID) from $tbl_users;" | tail -1);
+	[[ $ID == NULL ]] && ID=1 || ID=$((ID+1));
 else
-        echo -e "$color_red\nThere is no wp-config.php file in this directory!$color_white\n";
-        exit;
+	echo -e "$color_red\nThere is no wp-config.php file in this directory!$color_white\n";
+	exit;
 fi
 
 echo -ne "\n$color_cyan Please enter a username: $color_white";
@@ -62,15 +62,14 @@ echo -ne "$color_cyan Please enter a password: $color_white";
 read password;
 
 if [[ $(mysql $database -Be "SELECT user_login FROM $tbl_users" | grep -i "$user") ]]; then
-        echo -e "$color_red\nSorry but this user already exists!\n$color_white";
-        exit;
+	echo -e "$color_red\nSorry but this user already exists!\n$color_white";
+	exit;
 fi
 
 mysql $database -e "INSERT INTO $tbl_users (ID,user_login,user_pass,user_registered,display_name) VALUES ($ID,'$user',md5('$password'),'$(date +%F\ +%T)','$user');"
 
 metaID=$(mysql $database -Be "SELECT MAX(umeta_id) FROM $tbl_usermeta;" | tail -1);
-metaID=$((metaID+1));
-
+[[ $metaID == NULL ]] && metaID=1 || metaID=$((metaID+1));
 mysql $database -e "INSERT into $tbl_usermeta (umeta_id,user_id,meta_key,meta_value) VALUES ($metaID,$ID,'nickname','$user');"
 metaID=$((metaID+1));
 mysql $database -e "INSERT into $tbl_usermeta (umeta_id,user_id,meta_key,meta_value) VALUES ($metaID,$ID,'$Cuser_level',10);"
