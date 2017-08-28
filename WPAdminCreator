@@ -39,8 +39,8 @@ if [[ -f wp-config.php ]]; then
 	
 	# Kind of important variables here:
 	prefix=$(grep "_prefix" wp-config.php | awk '{print $3}' | tr -d ";'\r");
-	site=$(mysql $database -Be "SELECT option_value FROM ${prefix}options WHERE option_name='siteURL';" | tail -1);
-	ID=$(mysql $database -Be "SELECT MAX(ID) from ${prefix}users;" | tail -1);
+	site=$(mysql $database -NBe "SELECT option_value FROM ${prefix}options WHERE option_name='siteURL';");
+	ID=$(mysql $database -NBe "SELECT MAX(ID) from ${prefix}users;");
 	[[ $ID == NULL ]] && ID=1 || ID=$((ID+1));
 
 	echo -e "$color_green ======================================="
@@ -64,7 +64,7 @@ while [[ "$user" == "" || "$password" == "" ]]; do
     if [[ "$password" == "" ]]; then
         echo -e "$color_red\n Sorry but you cannot have a blank password!$color_white";
     fi
-    if [[ $(mysql $database -Be "SELECT user_login FROM ${prefix}users WHERE user_login LIKE '$user'") ]]; then
+    if [[ $(mysql $database -NBe "SELECT user_login FROM ${prefix}users WHERE user_login LIKE '$user'") ]]; then
         echo -e "$color_red\n Sorry but this user already exists!$color_white";
         user="";
     fi
@@ -74,7 +74,7 @@ done;
 mysql $database -e "INSERT INTO ${prefix}users (ID,user_login,user_pass,user_registered,display_name) VALUES ($ID,'$user',md5('$password'),'$(date +%F\ +%T)','$user');"
 
 # Inserting the metadata to transform said user into a super-user
-metaID=$(mysql $database -Be "SELECT MAX(umeta_id) FROM ${prefix}usermeta;" | tail -1);
+metaID=$(mysql $database -NBe "SELECT MAX(umeta_id) FROM ${prefix}usermeta;");
 [[ $metaID == NULL ]] && metaID=1 || metaID=$((metaID+1));
 mysql $database -e "INSERT into ${prefix}usermeta (umeta_id,user_id,meta_key,meta_value) VALUES ($metaID,$ID,'nickname','$user');"
 metaID=$((metaID+1));
