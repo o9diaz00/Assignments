@@ -4,8 +4,10 @@
 # Error Checking => Exit if:
 ## There is no wp-config.php file found within the same directory the script is ran
 ## If you attempted to add a user that already exists within the table
+##  --Changed so that it loops until you have an accepted value for user & password
 ######################################################################################
 
+# Color variables
 color_red="\e[31m";
 color_green="\e[32m";
 color_yellow="\e[33m";
@@ -13,9 +15,7 @@ color_white="\e[37m";
 color_cyan="\e[36m";
 color_purple="\e[35m";
 
-clear;
 echo -e "$color_purple      WordPress Admin User Creator";
-
 
 # Check if wp-config.php file exists in the current directory
 # If it does, grab the database name from the file
@@ -39,48 +39,55 @@ if [[ -f wp-config.php ]]; then
 	
 	# Kind of important variables here:
 	prefix=$(grep "_prefix" wp-config.php | awk '{print $3}' | tr -d ";'\r");
-	tbl_options="$prefix""options";
-	tbl_users="$prefix""users";
-	tbl_usermeta="$prefix""usermeta";
-	Cuser_level="$prefix""user_level";
-	Ccapabilities="$prefix""capabilities";
-	site=$(mysql $database -Be "SELECT option_value FROM $tbl_options WHERE option_name='siteURL';" | tail -1);
+	site=$(mysql $database -Be "SELECT option_value FROM ${prefix}options WHERE option_name='siteURL';" | tail -1);
+	ID=$(mysql $database -Be "SELECT MAX(ID) from ${prefix}users;" | tail -1);
+	[[ $ID == NULL ]] && ID=1 || ID=$((ID+1));
 
 	echo -e "$color_green ======================================="
 	echo -e "$color_cyan Site: $color_yellow $site\n$color_cyan Database: $color_yellow $database $color_white";
         echo -e "$color_green =======================================$color_white"
-	ID=$(mysql $database -Be "SELECT MAX(ID) from $tbl_users;" | tail -1);
-	[[ $ID == NULL ]] && ID=1 || ID=$((ID+1));
 else
 	echo -e "$color_red\nThere is no wp-config.php file in this directory!$color_white\n";
 	exit;
 fi
 
-echo -ne "\n$color_cyan Please enter a username: $color_white";
-read user;
-echo -ne "$color_cyan Please enter a password: $color_white";
-read password;
+# Begins the user input-checking for credentials
+user="";
+while [[ "$user" == "" || "$password" == "" ]]; do
+    echo -ne "\n$color_cyan Please enter a username: $color_white";
+    read user;
+    echo -ne "$color_cyan Please enter a password: $color_white";
+    read password;
+    if [[ "$user" == "" ]]; then
+        echo -e "$color_red\n Sorry but you cannot have a blank username!$color_white";
+    fi
+    if [[ "$password" == "" ]]; then
+        echo -e "$color_red\n Sorry but you cannot have a blank password!$color_white";
+    fi
+    if [[ $(mysql $database -Be "SELECT user_login FROM ${prefix}users WHERE user_login LIKE '$user'") ]]; then
+        echo -e "$color_red\n Sorry but this user already exists!$color_white";
+        user="";
+    fi
+done;
 
-if [[ $(mysql $database -Be "SELECT user_login FROM $tbl_users" | grep -i "$user") ]]; then
-	echo -e "$color_red\nSorry but this user already exists!\n$color_white";
-	exit;
-fi
+# Inserting the content into the users table to create the user
+mysql $database -e "INSERT INTO ${prefix}users (ID,user_login,user_pass,user_registered,display_name) VALUES ($ID,'$user',md5('$password'),'$(date +%F\ +%T)','$user');"
 
-mysql $database -e "INSERT INTO $tbl_users (ID,user_login,user_pass,user_registered,display_name) VALUES ($ID,'$user',md5('$password'),'$(date +%F\ +%T)','$user');"
-
-metaID=$(mysql $database -Be "SELECT MAX(umeta_id) FROM $tbl_usermeta;" | tail -1);
+# Inserting the metadata to transform said user into a super-user
+metaID=$(mysql $database -Be "SELECT MAX(umeta_id) FROM ${prefix}usermeta;" | tail -1);
 [[ $metaID == NULL ]] && metaID=1 || metaID=$((metaID+1));
-mysql $database -e "INSERT into $tbl_usermeta (umeta_id,user_id,meta_key,meta_value) VALUES ($metaID,$ID,'nickname','$user');"
+mysql $database -e "INSERT into ${prefix}usermeta (umeta_id,user_id,meta_key,meta_value) VALUES ($metaID,$ID,'nickname','$user');"
 metaID=$((metaID+1));
-mysql $database -e "INSERT into $tbl_usermeta (umeta_id,user_id,meta_key,meta_value) VALUES ($metaID,$ID,'$Cuser_level',10);"
+mysql $database -e "INSERT into ${prefix}usermeta (umeta_id,user_id,meta_key,meta_value) VALUES ($metaID,$ID,'${prefix}user_level',10);"
 metaID=$((metaID+1));
 capabilities='a:1:{s:13:"administrator";b:1;}';
-mysql $database -e "INSERT into $tbl_usermeta (umeta_id,user_id,meta_key,meta_value) VALUES ($metaID,$ID,'$Ccapabilities','$capabilities');";
+mysql $database -e "INSERT into ${prefix}usermeta (umeta_id,user_id,meta_key,meta_value) VALUES ($metaID,$ID,'${prefix}capabilities','$capabilities');";
 
+# Conclusion output and cleanup
 echo -e "\n$color_purple New Administrative User Successfully Created. Try to use the following credentials:\n$color_green ====================================";
 echo -e "$color_cyan SiteURL: $color_yellow $site/wp-admin\n$color_cyan Username: $color_yellow $user\n$color_cyan Password: $color_yellow "$password"\n$color_green ====================================\n$color_white";
 echo -e "$color_red DON'T FORGET TO DELETE THE USER WHEN YOU'RE DONE!";
 echo -e " =======================================$color_white";
-echo -e "$color_yellow mysql $database -ve \"DELETE FROM $tbl_usermeta WHERE user_id=$ID;\"\n mysql $database -ve \"DELETE FROM $tbl_users WHERE ID=$ID;\"";
-echo -e "\n If you want a one-liner >>>> mysql $database -ve \"DELETE FROM $tbl_usermeta WHERE user_id=$ID; DELETE FROM $tbl_users WHERE ID=$ID;\"";
+echo -e "$color_yellow mysql $database -ve \"DELETE FROM ${prefix}usermeta WHERE user_id=$ID;\"\n mysql $database -ve \"DELETE FROM ${prefix}users WHERE ID=$ID;\"";
+echo -e "\n If you want a one-liner >>>> mysql $database -ve \"DELETE FROM ${prefix}usermeta WHERE user_id=$ID; DELETE FROM ${prefix}users WHERE ID=$ID;\"";
 echo -e "$color_red =======================================\n$color_white";
