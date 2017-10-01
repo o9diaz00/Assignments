@@ -1,236 +1,307 @@
 ######################################
-##	 CLOUDLINUX PHP EDITOR	    ##
+##      CLOUDLINUX PHP EDITOR	    ##
 ######################################
 #! /bin/bash
 
-###########################
-# Quick Functions:        #
-#  - getUser()            #
-#  - phpOptions()         #
-#  - phpExtensions()      #
-#  - activeExtensions()   #
-###########################
+## Color variables ##
+color_red="\e[31m";
+color_green="\e[32m";
+color_yellow="\e[33m";
+color_white="\e[37m";
+color_cyan="\e[36m";
+color_purple="\e[35m";
 
+## Functions ##
+
+### getUser() => Allows for the ability to switch between users ###
 getUser()
 {
-	echo -n "For which account would you like to edit the php settings? ";
-	read user;
-
-	while [[ $user != $(grep $user /etc/userdomains | cut -d' ' -f2 | head -1) || $user == "nobody" ]]; do
-		echo -e "\n\e[31mThis user does not exist!\n\e[37m";
-		getUser;
-		if [[ $user =~ "" ]]; then
-			exit;
-		fi
-	done;
-	echo -e "\e[33mUser has been set to $user\e[37m";
+ while [[ ! $(awk '{print $2}' /etc/userdomains | grep -E "^${user}$") || "$user" == "nobody" ]]; do
+        echo -en "\n${color_white}For which account would you like to edit the php settings? ";
+        read user;
+        if [[ ! $(awk '{print $2}' /etc/userdomains | grep -E "^${user}$") || "$user" == "nobody" ]]; then
+                echo -e "\n${color_red}You have entered an invalid user!${color_white}";
+        fi
+ done;
 }
 
+### header() => Just pre-formatted text that I reuse ###
+## Variables ##
+#    - pad = number used to determine character padding
+#    - fill = pretty obvious that it's a string containing "="
+#    - math = an arithmetic to help with my padding
+header()
+{
+ pad=$(echo "$1" | wc -m);
+ fill="===================================================";
+ math=$(($pad+$(($pad/2))+1));
+ echo -e "${color_green}${fill}" | cut -c 1-$math;
+ printf " %s\n" "$1";
+ echo -e "${color_green}${fill}${color_white}" | cut -c 1-$math;
+}
+
+### preCheck() => Preliminary checks prior to actually initiaiting the script ###
+#     - Is this a CloudLinux server?
+#     - Is the user within CageFS?
+preCheck()
+{
+ if [[ $(awk '{print $1}' /etc/redhat-release) != "CloudLinux" ]]; then
+        echo -e "\n${color_red}This is not a CloudLinux Server!${color_white}";
+        exit;
+ fi
+
+ echo -e "${color_yellow}CloudLinux Easy PHP Editor${color_white}";
+ getUser;
+
+ if [[ $(cagefsctl --list-disabled | grep $user) ]]; then
+        echo -e "\n${colow_red}This user is not enabled in CageFS!${color_white}";
+        echo -en "\nDo you want to enable this user in CageFS [ y/n ]? ";
+        read input;
+        if [[ "$input" == "y" || "$input" == "Y" ]]; then
+                /usr/sbin/cagefsctl --enable $user;
+        else
+                echo -e "\n${color_red}Exiting script...${color_white}";
+                exit;
+        fi
+ fi
+}
+
+### phpVersion() => Allows the ability to change php versions based off of what is offered by the CloudLinux version ###
+## Variables ##
+#    - versions = list of php versions offered by the OS
+phpVersion()
+{
+ echo -e "\n${color_yellow}$user is currently set to: ${color_purple}$(selectorctl --user-current --user=$user | awk '{print $1}')";
+ header "Available Versions";
+ versions=$(selectorctl --list | awk '{print $1}');
+ for i in $versions; do
+        echo -e "${color_cyan}Version: ${color_white}$i";
+ done;
+ echo -e "${color_cyan}Version: ${color_white}native";
+ echo -ne "Please select a version: ";
+ read input;
+ if [[ $(echo "$versions" | grep -E "^${input}$") || "$input" == "native" ]]; then
+  selectorctl --set-user-current=$input --user=$user;
+  echo -e "${color_yellow}\n$user PHP successfully changed to: ${color_purple}$input!${color_white}";
+ elif [[ "$input" == "" ]]; then
+  return 0;
+ else
+  echo -e "\n${color_red}$input is an invalid input!${color_white}";
+ fi
+}
+
+### phpOptions() => Shows the options available as per the selected version ###
+#    - This is based off the /etc/cl.selector/php.conf and kind of assumes that it isn't broken so... yeah
+## Variables ##
+#    - version = user's current select php version
+#    - ii = I use this as part of my for loop just so they I can use modulus math and help set up my printf ( decide when to go to a newline )
+#    - options = all of the php options in which you can edit ( founded by the /etc/cl.selector/php.conf file )
 phpOptions()
 {
-	line=$(selectorctl --print-options --user=$user | grep -ni "title:$1" | cut -d':' -f1);
-	endline=$(($line + 5));
-	command=$(selectorctl --print-options --user=$user | cut -d$'\n' -f$line-$endline | grep VALUE | cut -d':' -f2);
-	if [[ $command ]]; then
-		echo -e "\n\e[33m$user current $1: \e[35m[ $command ]";
+ # First some variables
+ version=$(selectorctl --user-current --user=$user | awk '{print $1}');
+ ii=0;
+ options=$(grep -E "Directive" /etc/cl.selector/php.conf | awk '{print $3}');
+ 
+ # Check version; if native, then no
+ if [[ $version == "native" ]]; then
+	echo -e "\n${color_red}You cannot edit options while using the native version!${color_white}";
+	return 0;
+ fi
+
+ # Next display the options
+ header "PHP Options";
+ echo -ne "${color_cyan}";
+ for i in $options; do
+	printf "%s %5s" "$i" && ((ii+=1));
+	if [[ $((ii%3)) == 0 ]]; then
+	 	echo "";
 	fi
-	echo -en "\n\e[31mThis will set a new $1 in M.\nA value of less than 0, and/or any letters will return to the previous menu.\n\n\e[37mPlease enter a number: ";
-	read value;
-	regex='^[0-9]+$';
-	if [[ $value =~ $regex ]]; then
-		/usr/bin/piniset --append $1:$value'M' -u $user;
-		echo -e "\n\e[33mThe $1 has been set to \e[35m[ $value$(echo "M") ]\e[37m";
-	else
-		echo -e "\nYou did not enter a valid number!";
-	fi
+ done;
+ echo -ne "\n${color_white}Which of these would you like to change: ";
+ read input;
+ if [[ $(echo "$options" | grep -E "^${input}$") ]]; then
+	phpOptionSelect "$input";
+ elif [[ "$input" == "" ]]; then
+	return 0;
+ else
+	echo -e "\n${color_red}You entered an invalid input!${color_white}";
+ fi
 }
 
+### phpOptionSelect() => The part of the prior function that actually makes the changes ###
+#    - This is kind of tough for obvious reasons, but ultimately the functionality works
+#    - There are minimal checks made on user input; I think all possible accepted inputs are valid, it's just a matter of what is input 
+#    - Again, based off of the /etc/cl.selector/php.conf file, so hopefully it is standard or at the very least, valid
+## Variables ##
+#    - uid = last 2 digits of a user's id ( this is used to determine file location for CloudLinux )
+#    - pos = line count for a specific directive ( I use it to find other related valeus )
+#    - pos2 = line count also, but used to find separate values than the above
+#    - value = custom options once set are placed within a specific file.  The [ selectorctl --print-options ] command seems that it can break depending
+#               on the server's php.ini file ( for example if a deprecated variable is still included ), so I wanted to find an alternative
+#    - type = type of directive of php option ( list, value, or bool )
+#    - desc = comment section; description of the php option
+#    - default = the default values of the options ( this gives the user a good idea of an accepted value )
+#    - range = only relevant if the type is a list ( I use it as a means to determine accepted user input )
+#    - str = a few of the above variables turned into strings to be displayed.  If necessary, they're concatenated
+phpOptionSelect()
+{
+ uid=$(id -u $user | grep -o "..$");
+ version=$(selectorctl --user-current --user=$user | awk '{print $1}');
+ pos=$(grep "^Directive" /etc/cl.selector/php.conf | grep -n "$1$" | cut -d':' -f1);
+ pos2=$(grep -n "$1$" /etc/cl.selector/php.conf | cut -d':' -f1);
+ type=$(grep "^Type" /etc/cl.selector/php.conf | head -$pos | tail -1 | awk '{print $3}');
+ desc=$(grep "^Comment" /etc/cl.selector/php.conf | head -$pos | tail -1);
+ ((pos2+=1));
+ default=$(head -$pos2 /etc/cl.selector/php.conf | tail -1 | grep -E "^Default");
+ value=$(grep "$1" /var/cagefs/$uid/$user/etc/cl.php.d/alt-php$(echo "$version" | tr -d '.')/alt_php.ini | cut -d'=' -f2);
+ ((pos2+=2));
+ range=$(head -$pos2 /etc/cl.selector/php.conf | tail -1 | grep -E "^Range");
+ str="${color_yellow}$default\n";
+
+ header "$1";
+ if [[ $value ]]; then
+	str="${str}Current   = ${value}\n";
+ fi
+ if [[ "$type" == "list" ]]; then
+	str="${str}$range\n";
+ fi
+ str="${str}$desc${color_white}";
+ echo -e "$str";
+
+ case "$type" in
+	bool)
+	 echo -en "\nWhat would you like to change this value to ( 1=ON | 0=OFF ): ";
+	 read input;
+	 if [[ $(echo "$input" | grep -Ei "^1$|^on$") ]]; then
+		selectorctl --add-options=$1:on --version=$version --user=$user;
+		echo -e "${color_yellow}\n$1 successfully changed to: ${color_purple}on!${color_white}";
+	 elif [[ $(echo "$input" | grep -Ei "^0$|^off$") ]]; then
+		selectorctl --add-options=$1:off --version=$version --user=$user;
+		echo -e "${color_yellow}\n$1 successfully changed to: ${color_purple}off!${color_white}";
+ 	 elif [[ "$input" == "" ]]; then
+		return 0;
+	 else
+		echo -e "${color_red}You entered an invalid option!${color_white}";
+		return 0;
+	 fi;;
+	*)
+	  echo -ne "\nWhat would you like to change this value to: ";
+	  read input;
+	  if [[ $(echo "$default" | awk '{print $3}' | grep -E "^\-?[0-9]+$") || $(echo "$range" | tr ',' ' ' | awk '{print $3}' | grep -E "^\-?[0-9]+$") ]]; then
+	  	if [[ $(echo "$input" | grep -E "^\-?[0-9]+$") ]]; then 
+	  	  selectorctl --add-options=$1:$input --version=$version --user=$user;
+		  echo -e "${color_yellow}\n$1 successfully changed to: ${color_purple}$input!${color_white}";
+	  	elif [[ "$input" == "" ]]; then
+		  return 0;
+		else
+		  echo -e "${color_red}You entered an invalid option!${color_white}";
+		  return 0;
+		fi
+	  fi
+	  if [[ $(echo "$default" | awk '{print $3}' | grep -E "^\-?[0-9]+[s]$") || $(echo "$range" | tr ',' ' ' | awk '{print $3}' | grep -e "^\-?[0-9]+[s]$") ]]; then
+		if [[ $(echo "$input" | grep -E "^\-?[0-9]+$") || $(echo "$input" | grep -E "^\-?[0-9]+s$") ]]; then
+		  selectorctl --add-options=$1:$input --version=$version --user=$user;
+		  echo -e "${color_yellow}\n$1 successfully changed to: ${color_purple}$input!${color_white}";
+		elif [[ "$input" == "" ]]; then
+		  return 0;
+		else
+		  echo -e "${color_red}You entered an invalid option!${color_white}";
+		  return 0;
+		fi
+	  fi
+	  if [[ $(echo "$default" | awk '{print $3}' | grep -E "^\-?[0-9]+[KMG]$") || $(echo "$range" | tr ',' ' ' | awk '{print $3}' | grep -e "^\-?[0-9]+[KMG]$") ]]; then
+		if [[ $(echo "$input" | grep -E "^\-?[0-9]+$") || $(echo "$input" | grep -E "^\-?[0-9]+[KMG]$") ]]; then
+		  selectorctl --add-options=$1:$input --version=$version --user=$user;
+		  echo -e "${color_yellow}\n$1 successfully chaned to: ${color_purple}$input!${color_white}";
+		elif [[ "$input" == "" ]]; then
+		  return 0;
+		else
+		  echo -e "${color_red}You entered an invalid option!${color_white}";
+		  return 0;
+		fi
+	  fi;;
+	esac
+}
+
+### phpExtensions() => This allows us to turn on/off a user's extensions ###
+#    - I'm combining both on and off here rather than separating them
+#    - This just checks to see if the extension string is preceded with a + or - and determines whether it is enabled or disabled based off that
+## Variables ##
+#    - extensions = ALL of the extensions available to the user on the selected php version
 phpExtensions()
 {
-	echo -e "\n\e[32m============================\n$1 Extensions\n============================\n\e[36m";
-	extension=($(selectorctl --list-user-extensions --user=$user --all | grep $2 | awk '{print $2}'));
-	i=0;
-	while [[ $i -lt ${#extension[@]} ]]; do
-		echo -e "[$i]: ${extension[$i]}";
-		((i+=1));
-	done;
-	echo -e "\n(Press any other key to return)";
-	echo -ne "\n\e[37mPlease select a number: ";
-	read input;
-	if [[ $input -lt ${#extension[@]} ]] && [[ $input -gt -1 ]]; then
-		selectorctl --$1-user-extensions=${extension[$input]} --version=$version --user=$user;
-		echo -e "\e[33m\n$1 [ ${extension[$input]} ] is successful!\e[36m";
-	fi
-	activeExtensions;
-}
+ version=$(selectorctl --user-current --user=$user | awk '{print $1}');
+ if [[ $version == "native" ]]; then
+        echo -e "\n${color_red}You cannot edit versions while using the native version!${color_white}";
+        return 0;
+ fi
 
-activeExtensions()
-{
-   if [[ $version == "native" ]]; then
-      echo -e "\n\e[31mYou cannot edit while using the native version!\e[37m";
-   else
-      clear;
-      echo -e "\n\e[32m============================\nCurrent Extensions List:\n============================\n\e[33m";  
-      ## +- Style
-      i=0;
-      columns=5;
-      while read line; do
-         [ $(echo "$line" | egrep -q "^\+"; echo $?) -eq 0 ] && printf "\e[1;32m" || printf "\e[1;31m";
-         padding=$((30 - ${#line}));
-         echo -ne "$line";
-         printf "%-${padding}s\e[0m";
-         ((i+=1));
-         [ $(($i % $columns)) -eq 0 ] && printf "\n";
-      done < <(selectorctl --list-user-extensions --user=$user --all);
-      printf "\n"
-      
-      ## Numbered Style
-      # i=1;
-      # columns=5;
-      # number_padding_max=$(selectorctl --list-user-extensions --user=$user --all | wc -l)
-      # while read line; do
-         # number_padding=$((${#number_padding_max} - ${#i}));
-         # [ $(echo "$line" | egrep -q "^\+"; echo $?) -eq 0 ] && printf "\e[1;32m" || printf "\e[1;31m";
-         # line="$(echo "$line" | sed -r "s/^\s*(\+|\-) /$i.$(printf "%-${number_padding}s") /")";
-         # padding=$((30 - ${#line}));
-         # echo -ne "$line";
-         # printf "%-${padding}s\e[0m";
-         # ((i+=1));
-         # [ $(($i % $columns)) -eq 0 ] && printf "\n";
-      # done < <(selectorctl --list-user-extensions --user=$user --all);
-      # printf "\n"
-      
-      echo -e "\n\e[36mPress [1] to disable an extension\nPress [2] to enable an extension\n\n(Press any other key to return)\e[37m\n";
-      echo -n "Please select a number: ";
-      read input2;
-      if [[ "$input2" == 1 ]]; then
-         phpExtensions "disable" "+";
-      fi
-      if [[ "$input2" == 2 ]]; then
-         phpExtensions "enable" "-";
-      fi     
-   fi
-}
-
-###########################
-# The Actual Script       #
-###########################
-clear;
-OS=$(awk '{print $1}' /etc/redhat-release);
-if [[ $OS != "CloudLinux" ]]; then
-	echo -e "\n\e[31mThis is not a CloudLinux Server!\e[37m\n";
-	exit;
-fi
-
-echo -e "\n\e[33mCloudLinux Easy PHP Editor\e[37m\n";
-if [[ -z "$1" ]]; then
-	getUser;
-else
-	user="$1";
-fi
-	
-
-if [[ $(/usr/sbin/cagefsctl --list-disabled | grep $user) ]]; then
-	echo -e "\n\e[31mThis user is not enabled in CageFS!\e[37m";
-	echo -en "\nDo you want to enable this user into the CageFS [ y/n ]? "
-	read input;
-	if [[ "$input" == "y" ]]; then
-		/usr/sbin/cagefsctl --enable $user;
+ while [[ 1 ]]; do
+   header "Extensions";
+   ii=0;
+   extensions=$(selectorctl --list-user-extensions --user=$user --all | tr -d ' ');
+   for i in $extensions; do
+	if [[ $(echo "$i" | grep -E "^-") ]]; then
+	 echo -en "${color_red}";
 	else
-		echo -e "\n\e[31mExiting script...\e[37m\n";
-		exit;
+	 echo -en "${color_yellow}";
 	fi
-fi
+	printf "%s %2s" "$i" && ((ii+=1));
+	if [[ $((ii%7)) == 0 ]]; then
+	 echo "";
+	fi
+   done;
+   echo -ne "\n${color_white}Which of these extensions would you like to change: ";
+   read input;
+   if [[ "$input" == "" ]]; then
+	break;
+   fi
+   if [[ $(echo "$input" | grep -E "[-+]") ]]; then
+	echo -e "${color_red}Don't need to type out the + or -${color_white}";
+	return 0;
+   fi
+   if [[ $(echo "$extensions" | grep -E "${input}$" 2>&1) ]]; then
+	if [[ $(echo "$extensions" | grep -E "^\+${input}$") ]]; then
+	  selectorctl --disable-user-extensions=$input --user=$user --version=$version;
+	  echo -e "${color_yellow}Attemping to turn $input ${color_purple}off!${color_white}\n";
+	else
+	  selectorctl --enable-user-extensions=$input --user=$user --version=$version;
+	  echo -e "${color_yellow}Attempting to turn $input ${color_purple}on!${color_white}\n";
+	fi
+   else
+	echo -e "${color_red}You entered an invalid option!${color_white}\n";
+   fi
+ done;
+}
 
-while [[ true ]]; do
-	version=$(selectorctl --user-current --user=$user | awk '{print $1}');
-	echo -e "\n\e[31m-----$user-----\e[37m";
-	echo -e "\n\e[32m============================\nMenu Options\n============================\n";
-	echo -e "\e[36m[0] Exit\n[1] PHP Extensions \n[2] PHP Options \n[3] PHP Version\n[4] Change User\n\e[37m";
-	echo -n "Please select a number: ";
-	read input;
-	if [[ "$input" == 0 ]]; then
-		echo -e "\n\e[31mExiting script....\n\e[37m";
-		exit;
-	fi
+## Main Code ##
 
-	if [[ "$input" == 1 ]]; then
-		activeExtensions;
-	fi
+clear;
+user=$1;
+preCheck;
 
-	if [[ "$input" == 2 ]]; then
-		if [[ $version == "native" ]]; then
-			echo -e "\n\e[31mYou cannot edit while using the native version!\e[37m";
-		else
-			echo -e "\n\e[32m============================\nEditting PHP Options\n============================\n\e[37m";
-			echo -e "\e[36mPress [1] to change the MEMORY LIMIT\nPress [2] to change the UPLOAD MAX FILESIZE\nPress [3] to change the POST MAX SIZE\nPress [4] to change the MAX EXECUTION TIME\nPress [5] to change the MAX INPUT TIME\nPress [6] to change ALLOW URL FOPEN\n\n(Press any other key to return)\n\e[37m";
-			echo -n "Please select a number: ";
-			read input2;
-			if [[ "$input2" == 6 ]]; then
-				command=$(selectorctl --print-options --user=$user | cut -d$'\n' -f1-5 | grep VALUE | cut -d':' -f2);
-				if [[ $command ]]; then
-					echo -e "\n\e[33m$user has allow_url_fopen currently set to: \e[35m[ $command ]";
-				fi
-				echo -e "\n\e[36mPress [1] to turn allow_url_fopen On\nPress [2] to turn allow_url_fopen Off\n\e[37m";
-        			echo -en "Please select a number: ";
-				read value;
-				if [[ $value == 1 ]]; then
-					/usr/bin/piniset --append 'allow_url_fopen:On' -u $user;
-					echo -e "\n\e[33mallow_url_fopen has been turned \e[35mON!\e[37m";
-				fi
-				if [[ $value == 2 ]]; then
-					/usr/bin/piniset --append 'allow_url_fopen:Off' -u $user;
-					echo -e "\n\e[33mallow_url_fopen has been turned \e[35mOFF!\e[37m";
-				fi
-			fi
-			if [[ "$input2" == 1 ]]; then
-				phpOptions "memory_limit";
-			fi
-			if [[ "$input2" == 2 ]]; then
-				phpOptions "upload_max_filesize";
-			fi
-			if [[ "$input2" == 3 ]]; then
-				phpOptions "post_max_size";
-			fi
-			if [[ "$input2" == 4 ]]; then
-				phpOptions "max_execution_time"
-			fi
-			if [[ "$input2" == 5 ]]; then
-				phpOptions "max_input_time"
-			fi		
-		fi
-	fi
+# Main menu here:
+while [[ 1 ]]; do
+        version=$(selectorctl --user-current --user=$user | awk '{print $1}');
+        echo -e "\n${color_red}**$user [$version]**${color_white}";
+        header "Menu Options";
+        echo -e "${color_cyan}[0] Exit\n[1] PHP Extensions \n[2] PHP Options \n[3] PHP Version\n[4] Change User\n${color_white}";
+        echo -n "Please select a number: ";
+        read input;
 
-	if [[ "$input" == 3 ]]; then
-		echo -e "\n\e[33m$user is currently set to: \e[35m[ `selectorctl --user-current --user=$user` ]\e[37m";
-		echo -e "\n\e[36mPress [1] to change the php version\nPress [2] to use the native PHP\n\n(Press any other key to return)\e[37m\n";
-		echo -n "Please select a number: ";
-		read input2;
-		if [[ "$input2" == 2 ]]; then
-			selectorctl --set-user-current=native --user=$user;
-			echo -e "\n\e[33m$user PHP successfully set to native version!\e[36m";
-		fi
-		if [[ "$input2" == 1 ]]; then
-			versions=($(selectorctl --list | awk '{print $1}'));
-			i=0;
-			echo -e "\n\e[32m============================\nChanging PHP version\n============================\n\e[36m";
-			while [[ $i -lt ${#versions[@]} ]]; do
-				echo -e "\e[36m[$i] Set to versions: ${versions[$i]}";
-				((i+=1));
-			done;
-			echo -e "\n(Press any other key to return)\e[37m";
-			echo -ne "\nPlease select a number: ";
-			read input2;
-			if [[ "$input2" =~ ^[0-9]+$ ]] && [[ $input2 -lt ${#versions[@]} ]] && [[ $input2 -gt -1 ]]; then
-				selectorctl --set-user-current=${versions[$input2]} --user=$user;
-				echo -e "\e[33m\n$user PHP successfully changed to: ${versions[$input2]}!\e[36m";
-         else
-            echo -e "$input2 is an invalid input";
-			fi
-		fi
-	fi
-	
-	if [[ "$input" == 4 ]]; then
-		getUser;
-	fi
+        case "$input" in
+            0)
+             echo -e "\n${color_red}Exiting script...${color_white}\n";
+            exit;;
+            1)
+             phpExtensions;;
+            2)
+             phpOptions;;
+            3)
+             phpVersion;;
+            4)
+             user="";
+             getUser;;
+        esac
 done;
