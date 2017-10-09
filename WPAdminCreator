@@ -38,7 +38,7 @@ if [[ -f wp-config.php ]]; then
 	fi
 	
 	# Kind of important variables here:
-	prefix=$(grep "_prefix" wp-config.php | awk '{print $3}' | tr -d ";'\r");
+	prefix=$(grep "_prefix" wp-config.php | awk '{print $3}' | tr -d ";'\r\"");
 	site=$(mysql $database -NBe "SELECT option_value FROM ${prefix}options WHERE option_name='siteURL';");
 	ID=$(mysql $database -NBe "SELECT MAX(ID) from ${prefix}users;");
 	[[ $ID == NULL ]] && ID=1 || ID=$((ID+1));
