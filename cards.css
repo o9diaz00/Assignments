@@ -1,0 +1,20 @@
+.card
+{
+	border: solid 1px #aaa;
+	border-radius: 9px;
+	width: 95px;
+	height: 150px;
+	float: left;
+	background-color: white;
+	padding: 3px 3px 3px 3px;
+}
+.card > .value
+{
+	font-size: 20pt; /* Not a fan of 24pt here */
+	font-family: sans-serif;
+}
+/* Let's freestyle a bit and differentiate between black cards and red cards w/ actual colors */
+.card > .Diamonds
+{ color: red; }
+.card > .Hearts
+{ color: red; }
